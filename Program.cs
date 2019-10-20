@@ -1,49 +1,26 @@
-﻿using MiBrain.ISS;
-using MiBrain.ISS.Exceptions;
-using System;
-using System.Net.Sockets;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using ElectronNET.API;
 
-namespace MiBrain
+namespace fNIRS
 {
-    class Program
+    public class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
-            Run().Wait();
+            CreateWebHostBuilder(args).Build().Run();
         }
 
-        static async Task Run()
-        {
-            try
-            {
-                using (var adapter = new Adapter("localhost", 5556))
-                {
-                    Console.WriteLine("CONNECTED!");
-                    //var status = await adapter.GetHardwareStatus();
-
-                    await adapter.StartStream();
-
-                    while (true)
-                    {
-                        var command = Console.ReadLine();
-                        if (command.ToUpper() == "QUIT")
-                        {
-                            break;
-                        }
-                        //await adapter.Send(command);
-                    }
-
-                    await adapter.StopStream();
-
-                    adapter.StopReader();
-                    await adapter.Disconnect();
-                }
-            }
-            catch(Exception e)
-            {
-                Console.WriteLine(e.Message);
-            }
-        }
+        public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
+            WebHost.CreateDefaultBuilder(args)
+                .UseStartup<Startup>()
+                .UseElectron(args);
     }
 }
