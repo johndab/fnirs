@@ -1,27 +1,43 @@
-﻿using MiBrain.ISS.Exceptions;
-using MiBrain.ISS.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using fNIRS.Hardware.ISS.Converters;
+using fNIRS.Hardware.Models;
+using fNIRS.Hardware.Exceptions;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
-namespace MiBrain.ISS
+namespace fNIRS.Hardware.ISS
 {
-    public class Adapter : IDisposable
+    public class ISSAdapter : IAdapter
     {
 
-        private readonly TcpClient client;
-        private readonly NetworkStream stream;
+        private TcpClient client;
+        private NetworkStream stream;
+        private readonly ILogger<ISSAdapter> logger;
+
+        private readonly string host;
+        private readonly int port;
 
         private const int HELLO_TIMEOUT = 10000;
         private DataReader reader;
 
 
-        public Adapter(string host, int port)
+        public ISSAdapter(IConfiguration Configuration, ILogger<ISSAdapter> logger)
         {
+            this.logger = logger;
+            host = Configuration.GetValue<string>("ISSAdapter:host");
+            port = Configuration.GetValue<int>("ISSAdapter:port");
+        }
+
+        public void Connect()
+        {
+            logger.LogDebug($"Connecting to ISS: {host}:{port}");
+
             client = new TcpClient(host, port);
             stream = client.GetStream();
             reader = new DataReader(stream);
@@ -37,6 +53,11 @@ namespace MiBrain.ISS
         {
             reader.Interrupt();
             reader.Join();
+        }
+
+        public ICollection<Frequency> GetFrequencies()
+        {
+            return Constants.DMC_FREQUENCY_LIST;
         }
 
         public void Hello()
@@ -82,8 +103,8 @@ namespace MiBrain.ISS
             var result = await Read();
 
             var dict = ToDictionary(result, Constants.HardwareStatusPrexies);
-
-             return HardwareStatus.FromDictionary(dict);
+            var status = new HardwareStatus();
+            return status.FromDictionary(dict);
         }
 
         private IDictionary<string, string> ToDictionary(string data, string[] prefixes)

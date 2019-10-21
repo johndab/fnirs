@@ -1,16 +1,12 @@
 <template>
   <div class="full-height">
-
-    <div class="columns full-height" >
-
-      <div class="column is-three-quarters" >
+    <div class="d-flex full-height">
+      <div class="flex-grow-1">
         <Board />
       </div>
-      <div class="column is-paddingless" >
-        <SideBar 
-        />
+      <div style="width: 250px">
+        <SideBar />
       </div>
-
     </div>
   </div>
 </template>

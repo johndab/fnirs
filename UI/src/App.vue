@@ -7,9 +7,6 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 
-// tslint:disable-next-line
-// const { ipcRenderer } = require("electron");
-
 @Component({
 })
 export default class App extends Vue {}
@@ -22,9 +19,5 @@ export default class App extends Vue {}
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-}
-
-body {
-  margin-top: 10px;
 }
 </style>

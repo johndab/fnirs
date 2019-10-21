@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using fNIRS.Hardware.Models;
 
-namespace MiBrain.ISS
+namespace fNIRS.Hardware.ISS
 {
     public static class Constants
     {
@@ -47,11 +48,40 @@ namespace MiBrain.ISS
         public static string DMC_GET_BASE_RF_FREQ_BY_INDEX = "GET_BASE_RF_FREQ_BY_INDEX";
                 /*  Index 1=1.953125MHz, 2=3.90625MHz, 3=7.8125MHz, 4=11.71875MHz, 5=15.625MHz,
                     6=19.53125MHz, 7=31.25MHz, 8=46.875MHz, 9=62.5MHz, 10=78.125MHz, 11=93.75MHz,
-                    12=109.375MHz, 13=125MHz, 14=140625MHz, 15=156.25MHz, 16=171.875MHz,
-                    17=187.5MHz, 18=203125MHz, 19=218.75MHz, 20=234.375MHz, 21=250MHz,
-                    22=265.625MHz 23=28125MHz, 24=296.875MHz, 25=3125MHz */
+                    12=109.375MHz, 13=125MHz, 14=140.625MHz, 15=156.25MHz, 16=171.875MHz,
+                    17=187.5MHz, 18=203.125MHz, 19=218.75MHz, 20=234.375MHz, 21=250MHz,
+                    22=265.625MHz 23=281.25MHz, 24=296.875MHz, 25=312.5MHz */
                 //the defualt startup value is 14 or 140MHz, but this may be changed by command
                 //line option on startup.
+
+        public static List<Frequency> DMC_FREQUENCY_LIST = new List<Frequency>() {
+                new Frequency(1, "1.953125MHz"),
+                new Frequency(2, "3.90625MHz"),
+                new Frequency(3, "7.8125MHz"),
+                new Frequency(4, "11.71875MHz"),
+                new Frequency(5, "15.625MHz"),
+                new Frequency(6, "19.53125MHz"),
+                new Frequency(7, "31.25MHz"),
+                new Frequency(8, "46.875MHz"),
+                new Frequency(9, "62.5MHz"),
+                new Frequency(10, "78.125MHz"),
+                new Frequency(11, "93.75MHz"),
+                new Frequency(12, "109.375MHz"),
+                new Frequency(13, "125MHz"),
+                new Frequency(14, "140.625MHz"),
+                new Frequency(15, "156.25MHz"),
+                new Frequency(16, "171.875MHz"),
+                new Frequency(17, "187.5MHz"),
+                new Frequency(18, "203.125MHz"),
+                new Frequency(19, "218.75MHz"),
+                new Frequency(20, "234.375MHz"),
+                new Frequency(21, "250MHz"),
+                new Frequency(22, "265.625MHz"),
+                new Frequency(23, "281.25MHz"),
+                new Frequency(24, "296.875MHz"),
+                new Frequency(25, "312.5MHz"),
+        };
+
         public static string DMC_GET_BASE_RF_FREQ = "GET_BASE_RF_FREQ";// not yet implimented
         public static string DMC_SET_BASE_RF_FREQ = "SET_BASE_RF_FREQ";// not yet implimented
         public static string DMC_HELP = "HELP";

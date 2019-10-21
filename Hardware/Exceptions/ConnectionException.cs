@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace MiBrain.ISS.Exceptions
+namespace fNIRS.Hardware.Exceptions
 {
     public class ConnectionException : Exception
     {

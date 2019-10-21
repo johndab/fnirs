@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading;
 using System.Linq;
 using System.Threading.Tasks;
-using MiBrain.ISS.Models;
+using fNIRS.Hardware.Models;
 
-namespace MiBrain.ISS
+namespace fNIRS.Hardware.ISS
 {
     public class DataReader
     {
@@ -17,7 +17,7 @@ namespace MiBrain.ISS
         private NetworkStream stream;
         private Byte[] buffer = new Byte[BUFFER_SIZE];
         private List<Byte> packet = new List<Byte>();
-        private PacketData currentPacket;
+        private DataPacket currentPacket;
 
         private bool streaming = false;
         private bool started = false;
@@ -53,7 +53,7 @@ namespace MiBrain.ISS
             RunAsync().Wait();
         }
 
-        public async Task<PacketData> GetPacketData(string data)
+        public async Task<DataPacket> GetPacketData(string data)
         {
             string[] rows = data.Split("\n");
             if (rows.Length == 0) return null;
@@ -70,7 +70,7 @@ namespace MiBrain.ISS
             var time = indexAndTime[4].Replace("sent=", "");
 
             Console.WriteLine(row);
-            return new PacketData()
+            return new DataPacket()
             {
                 Index = index,
                 Size = size,

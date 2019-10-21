@@ -1,29 +1,16 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Text;
+using fNIRS.Hardware.Models;
+using fNIRS.Hardware.ISS;
 
-namespace MiBrain.ISS.Models
+namespace fNIRS.Hardware.ISS.Converters
 {
-    public class HardwareStatus
+
+    public static class StatusConverter
     {
-        public HardwareStatus()
-        {
-            ADC = new ModuleStatus();
-            PMT = new ModuleStatus();
-            DDS = new ModuleStatus();
-        }
 
-        public DateTime Time { get; set; }
-        public int MaxBytes { get; set; }
-        public string Version { get; set; }
-        public ModuleStatus ADC { get; set; }
-        public ModuleStatus PMT { get; set; }
-        public ModuleStatus DDS { get; set; }
-    
-        public static HardwareStatus FromDictionary(IDictionary<string, string> dict)
+        public static HardwareStatus FromDictionary(this HardwareStatus status, IDictionary<string, string> dict)
         {
-            var status = new HardwareStatus();
-
             if(dict.TryGetValue(Constants.DMC_SERVER_HELLO, out var timeStr))
             {
                 try
@@ -96,20 +83,5 @@ namespace MiBrain.ISS.Models
 
             return status;
         }
-
-        public override string ToString()
-        {
-            return $"Hardware status " +
-                $"Time: {this.Time} " +
-                $"MaxBytes: {this.MaxBytes} ";
-        }
-    }
-
-    public class ModuleStatus
-    {
-        public bool PrimaryConnected { get; set; }
-        public bool PrimaryVirtualConnected { get; set; }
-        public bool SecondaryConnected { get; set; }
-        public bool SecondaryVirtualConnected { get; set; }
     }
 }

@@ -6,6 +6,11 @@ using ElectronNET.API;
 using ElectronNET.API.Entities;
 using VueCliMiddleware;
 using System.Linq;
+using fNIRS.Services;
+using fNIRS.Hardware;
+using fNIRS.Hardware.ISS;
+using Scrutor;
+using System;
 
 namespace fNIRS
 {
@@ -24,9 +29,18 @@ namespace fNIRS
             services.AddMvc();
 
             services.AddSpaStaticFiles(configuration =>
-           {
-               configuration.RootPath = "./UI/dist";
-           });
+            {
+                configuration.RootPath = "./UI/dist";
+            });
+
+            services.AddSingleton<IAdapter, ISSAdapter>(); 
+
+            services.Scan(scan => scan
+                .FromAssemblyOf<IService>()
+                    .AddClasses(classes => classes.AssignableTo<IService>())
+                    .AsImplementedInterfaces()
+                    .WithTransientLifetime()
+            );
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -53,6 +67,13 @@ namespace fNIRS
             {
                 ElectronBootstrap();
             }
+
+            var services = app.ApplicationServices.GetServices<IService>();
+            foreach(var service in services)
+            {
+                Console.WriteLine(service.GetType().FullName);
+                service.Register();
+            }
         }
 
         public async void ElectronBootstrap()
@@ -67,12 +88,6 @@ namespace fNIRS
 
             browserWindow.OnReadyToShow += () => browserWindow.Show();
             browserWindow.SetTitle("fNIRS Monitoring");
-
-            Electron.IpcMain.On("async-msg", (x) =>
-            {
-                var mainWindow = Electron.WindowManager.BrowserWindows.First();
-                Electron.IpcMain.Send(mainWindow, "asynchronous-reply", "pong");
-            });
         }
     }
 }

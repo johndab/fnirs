@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace MiBrain.ISS.Models
+namespace fNIRS.Hardware.Models
 {
-    public class PacketData
+    public class DataPacket
     {
         public int Index { get; set; }
         public int Size { get; set; }
