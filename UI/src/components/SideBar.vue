@@ -1,32 +1,23 @@
 <template>
-  <div class="sidebar">
-    Sidebar
-
-    <!-- <BFormSelect 
-      v-model="frequency"
-      :options="frequencies"
-    /> -->
-
-    {{ frequencies }}
+  <div class="sidebar text-left">
+    <div class="px-2">
+      <Connection />
+      <Streaming />
+      <Frequency />
+    </div>
   </div>
 </template>
 
 <script>
-// tslint:disable-next-line
-const { ipcRenderer } = require("electron");
-
+import Frequency from './sidebar/Frequency';
+import Connection from './sidebar/Connection';
+import Streaming from './sidebar/Streaming';
 
 export default {
-  data: () => ({
-    frequencies: null,
-  }),
-  created() {
-    this.getFrequencies();
-  },
-  methods: {
-    getFrequencies() {
-      this.frequencies = ipcRenderer.sendSync("getFrequencies");
-    },
+  components: {
+    Frequency,
+    Connection,
+    Streaming,
   },
 }
 </script>

@@ -22,6 +22,7 @@ namespace fNIRS.Hardware.ISS
 
         private readonly string host;
         private readonly int port;
+        private bool connected = false;
 
         private const int HELLO_TIMEOUT = 10000;
         private DataReader reader;
@@ -34,25 +35,119 @@ namespace fNIRS.Hardware.ISS
             port = Configuration.GetValue<int>("ISSAdapter:port");
         }
 
-        public void Connect()
+#region CONNECTION
+
+        public Task Connect()
         {
             logger.LogDebug($"Connecting to ISS: {host}:{port}");
 
-            client = new TcpClient(host, port);
-            stream = client.GetStream();
-            reader = new DataReader(stream);
-            Hello();
+            try
+            {
+                this.client = new TcpClient(host, port);
+                this.stream = client.GetStream();
+                this.reader = new DataReader(stream);
+
+                Hello();
+                this.connected = true;
+            } 
+            catch(Exception e)
+            {
+                logger.LogCritical(e, e.Message);
+            }
+
+            return Task.CompletedTask;
         }
 
-        public void StartReader()
+        public void Hello()
         {
-            reader.Start();
+            var result = reader.ReadAvailable(HELLO_TIMEOUT);
+            if (string.IsNullOrEmpty(result))
+                throw new ConnectionException($"Server does not responded in {HELLO_TIMEOUT} ms");
+
+            if (result.IndexOf(Constants.DMC_SERVER_HELLO) != -1)
+                return;
+
+            throw new ConnectionException("Invalid hello message");
         }
 
-        public void StopReader()
+        public async Task Disconnect()
         {
+            if (connected)
+            {
+                try
+                {
+                    await Send(Constants.DMC_QUIT);
+                } 
+                finally
+                {
+                    try
+                    {
+                        client.GetStream().Close();
+                        client.Close();
+                    }
+                    finally
+                    {
+                        client = null;
+                        stream = null;
+                        this.connected = false;
+                    }
+                }
+            }
+        }
+
+        public bool IsConnected()
+        {
+            return this.connected;
+        }
+
+#endregion
+#region STREAMING
+        public async Task StartStreaming()
+        {
+            this.reader.Start();
+            this.reader.StartStreaming();
+            await Send(Constants.DMC_START);
+        }
+
+        public async Task StopStreaming()
+        {
+            await Send(Constants.DMC_STOP);
+            this.reader.StopStreaming();
             reader.Interrupt();
             reader.Join();
+        }
+
+        public bool IsStreaming()
+        {
+            return reader.IsStreaming();
+        }
+
+        public void RegisterStreamListener(Action<DataPacket> action)
+        {
+            reader.RegisterStreamListener(action);
+        }
+        public void RemoveStreamListener()
+        {
+            reader.RemoveStreamListener();
+        }
+#endregion
+#region FREQUENCIES
+
+        public async Task<int> GetFrequency()
+        {
+            await Send(Constants.DMC_GET_BASE_RF_FREQ_BY_INDEX);
+            var result = Read();
+            result = result.Replace(Constants.DMC_GET_BASE_RF_FREQ_BY_INDEX_ACK, "");
+            result = result.Replace(Constants.DMC_BASE_RF_FREQ_INDEX_TAG, "");
+            var value = result.Split("\t")[2];
+
+            return int.Parse(value);
+        }
+
+        public async Task SetFrequency(int f)
+        {
+            await Send(Constants.DMC_SET_BASE_RF_FREQ_BY_INDEX + " " + f.ToString());
+            Read();
         }
 
         public ICollection<Frequency> GetFrequencies()
@@ -60,47 +155,14 @@ namespace fNIRS.Hardware.ISS
             return Constants.DMC_FREQUENCY_LIST;
         }
 
-        public void Hello()
-        {
-            try
-            {
-                var result = reader.GetChunk(HELLO_TIMEOUT);
-                if (result == null)
-                    throw new ConnectionException($"Server does not responded in {HELLO_TIMEOUT} ms");
+#endregion
 
-                while(stream.DataAvailable)
-                {
-                    var read = reader.GetChunk(HELLO_TIMEOUT);
-                    if (read != null)
-                        result += read;
-                    else
-                        break;
-                }
 
-                if (result.IndexOf(Constants.DMC_SERVER_HELLO) != -1)
-                    return;
-            }
-            catch (IOException) {}
-            throw new ConnectionException("Invalid hello message");
-        }
-
-        public async Task StartStream()
-        {
-            this.reader.StartStreaming();
-            await Send(Constants.DMC_START);
-        }
-
-        public async Task StopStream()
-        {
-            await Send(Constants.DMC_STOP);
-            this.reader.StopStreaming();
-
-        }
 
         public async Task<HardwareStatus> GetHardwareStatus()
         {
             await Send(Constants.DMC_GET_HARDWARE_STATUS);
-            var result = await Read();
+            var result = Read();
 
             var dict = ToDictionary(result, Constants.HardwareStatusPrexies);
             var status = new HardwareStatus();
@@ -129,22 +191,21 @@ namespace fNIRS.Hardware.ISS
         }
 
         public async Task Send(string command)
-        {           
+        {
+            if (!connected)
+                throw new ConnectionException("Not connected!");
+
             Byte[] data = Encoding.ASCII.GetBytes(command+"\n");
             await stream.WriteAsync(data, 0, data.Length);
             await stream.FlushAsync();
         }
 
-        private async Task<string> Read()
+        private string Read()
         {
-            var result = string.Empty;
+            if (!connected)
+                throw new ConnectionException("Not connected!");
 
-            while(stream.DataAvailable)
-            {
-                result += await reader.GetChunkAsync();
-            }
-
-            return result;
+            return reader.ReadAvailable(10000);
         }
 
         public void Join()
@@ -152,15 +213,10 @@ namespace fNIRS.Hardware.ISS
             reader.Join();
         }
 
-        public async Task Disconnect()
-        {
-            await Send(Constants.DMC_QUIT);
-        }
-
         public void Dispose()
         {
-            client.Close();
-            stream.Close();
+            this.Disconnect().Wait();
         }
+
     }
 }

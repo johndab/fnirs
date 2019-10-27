@@ -55,35 +55,35 @@ namespace fNIRS.Hardware.ISS
                 //line option on startup.
 
         public static List<Frequency> DMC_FREQUENCY_LIST = new List<Frequency>() {
-                new Frequency(1, "1.953125MHz"),
-                new Frequency(2, "3.90625MHz"),
-                new Frequency(3, "7.8125MHz"),
-                new Frequency(4, "11.71875MHz"),
-                new Frequency(5, "15.625MHz"),
-                new Frequency(6, "19.53125MHz"),
-                new Frequency(7, "31.25MHz"),
-                new Frequency(8, "46.875MHz"),
-                new Frequency(9, "62.5MHz"),
-                new Frequency(10, "78.125MHz"),
-                new Frequency(11, "93.75MHz"),
-                new Frequency(12, "109.375MHz"),
-                new Frequency(13, "125MHz"),
-                new Frequency(14, "140.625MHz"),
-                new Frequency(15, "156.25MHz"),
-                new Frequency(16, "171.875MHz"),
-                new Frequency(17, "187.5MHz"),
-                new Frequency(18, "203.125MHz"),
-                new Frequency(19, "218.75MHz"),
-                new Frequency(20, "234.375MHz"),
-                new Frequency(21, "250MHz"),
-                new Frequency(22, "265.625MHz"),
-                new Frequency(23, "281.25MHz"),
-                new Frequency(24, "296.875MHz"),
-                new Frequency(25, "312.5MHz"),
+                new Frequency(1, "1.953125 MHz"),
+                new Frequency(2, "3.90625 MHz"),
+                new Frequency(3, "7.8125 MHz"),
+                new Frequency(4, "11.71875 MHz"),
+                new Frequency(5, "15.625 MHz"),
+                new Frequency(6, "19.53125 MHz"),
+                new Frequency(7, "31.25 MHz"),
+                new Frequency(8, "46.875 MHz"),
+                new Frequency(9, "62.5 MHz"),
+                new Frequency(10, "78.125 MHz"),
+                new Frequency(11, "93.75 MHz"),
+                new Frequency(12, "109.375 MHz"),
+                new Frequency(13, "125 MHz"),
+                new Frequency(14, "140.625 MHz"),
+                new Frequency(15, "156.25 MHz"),
+                new Frequency(16, "171.875 MHz"),
+                new Frequency(17, "187.5 MHz"),
+                new Frequency(18, "203.125 MHz"),
+                new Frequency(19, "218.75 MHz"),
+                new Frequency(20, "234.375 MHz"),
+                new Frequency(21, "250 MHz"),
+                new Frequency(22, "265.625 MHz"),
+                new Frequency(23, "281.25 MHz"),
+                new Frequency(24, "296.875 MHz"),
+                new Frequency(25, "312.5 MHz"),
         };
 
-        public static string DMC_GET_BASE_RF_FREQ = "GET_BASE_RF_FREQ";// not yet implimented
-        public static string DMC_SET_BASE_RF_FREQ = "SET_BASE_RF_FREQ";// not yet implimented
+        // public static string DMC_GET_BASE_RF_FREQ = "GET_BASE_RF_FREQ"; // not yet implimented
+        // public static string DMC_SET_BASE_RF_FREQ = "SET_BASE_RF_FREQ"; // not yet implimented
         public static string DMC_HELP = "HELP";
 
         //Define some outbound message tags which might be acted on by client

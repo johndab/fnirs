@@ -23,7 +23,6 @@ namespace fNIRS
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
@@ -33,7 +32,11 @@ namespace fNIRS
                 configuration.RootPath = "./UI/dist";
             });
 
-            services.AddSingleton<IAdapter, ISSAdapter>(); 
+            var demo = Configuration.GetValue("ISSAdapter:demo", false);
+            if (demo)
+                services.AddSingleton<IAdapter, DemoAdapter>();
+            else
+                services.AddSingleton<IAdapter, ISSAdapter>();
 
             services.Scan(scan => scan
                 .FromAssemblyOf<IService>()
@@ -43,7 +46,6 @@ namespace fNIRS
             );
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             app.UseSpaStaticFiles();
@@ -83,7 +85,7 @@ namespace fNIRS
                 {
                     Width = 1152,
                     Height = 864,
-                    Show = false
+                    Show = false,
                 });
 
             browserWindow.OnReadyToShow += () => browserWindow.Show();

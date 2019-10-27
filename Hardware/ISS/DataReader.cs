@@ -22,6 +22,7 @@ namespace fNIRS.Hardware.ISS
         private bool streaming = false;
         private bool started = false;
         private bool blockStarted = false;
+        private Action<DataPacket> newPacketAction;
 
         public bool IsAlive { get; private set; }
 
@@ -47,13 +48,61 @@ namespace fNIRS.Hardware.ISS
         {
             this.streaming = false;
         }
+        
+        public bool IsStreaming() {
+            return this.streaming;
+        }
+
+        public void RegisterStreamListener(Action<DataPacket> action)
+        {
+            this.newPacketAction = action;
+        }
+
+        public void RemoveStreamListener()
+        {
+            this.newPacketAction = null;
+        }
 
         protected void Run()
         {
             RunAsync().Wait();
         }
 
-        public async Task<DataPacket> GetPacketData(string data)
+        protected async Task RunAsync()
+        {
+            while (thread.IsAlive && stream.CanRead)
+            {
+                if (!streaming)
+                {
+                    var chunk = GetChunk(TIMEOUT);
+                    if (chunk != null)
+                    {
+                        Console.Write(chunk);
+                    }
+                }
+                else
+                {
+                    if (!this.blockStarted)
+                    {
+                        var startMessage = ReadTo(Constants.DMC_BINARY_DATA_STARTS);
+
+                        if (startMessage.Length > 0)
+                        {
+                            this.currentPacket = await GetPacketData(startMessage);
+                            this.blockStarted = true;
+                        }
+                    }
+                    else
+                    {
+                        var end = ReadTo(Constants.DMC_BINARY_DATA_ENDS);
+                        if(newPacketAction != null)
+                                newPacketAction.Invoke(this.currentPacket);
+                    }
+                }
+            }
+        }
+
+        private async Task<DataPacket> GetPacketData(string data)
         {
             string[] rows = data.Split("\n");
             if (rows.Length == 0) return null;
@@ -79,56 +128,21 @@ namespace fNIRS.Hardware.ISS
             // 100 Data Starts:	339928 bytes, block #1  time sent=1.33000E-001
         }
 
-        protected async Task RunAsync()
+        public string ReadTo(string key)
         {
-            while (thread.IsAlive && stream.CanRead)
+            lock(this)
             {
-                if (!streaming)
+                var result = string.Empty;
+                while(true)
                 {
-                    var chunk = GetChunk(TIMEOUT);
-                    if (chunk != null)
+                    var chunk = GetChunkAsync();
+                    chunk.Wait();
+                    result += chunk;
+                    var index = result.IndexOf(key);
+                    if (index > -1)
                     {
-                        Console.Write(chunk);
+                        return result;
                     }
-                }
-                else
-                {
-                    if (!this.blockStarted)
-                    {
-                        var startRead = ReadTo(Constants.DMC_BINARY_DATA_STARTS);
-                        startRead.Wait();
-                        var startMessage = startRead.Result;
-
-                        if (startMessage.Length > 0)
-                        {
-                            var p = GetPacketData(startMessage);
-                            p.Wait();
-                            currentPacket = p.Result;
-
-                            this.blockStarted = true;
-                        }
-                    }
-                    else
-                    {
-                        var endRead = ReadTo(Constants.DMC_BINARY_DATA_ENDS);
-                        endRead.Wait();
-                        var end = endRead.Result;
-                    }
-                }
-            }
-        }
-
-        public async Task<string> ReadTo(string key)
-        {
-            var result = string.Empty;
-            while(true)
-            {
-                var chunk = await GetChunkAsync();
-                result += chunk;
-                var index = result.IndexOf(key);
-                if (index > -1)
-                {
-                    return result;
                 }
             }
         }
@@ -157,6 +171,26 @@ namespace fNIRS.Hardware.ISS
             return null;
         }
 
+        public string ReadAvailable(int timeout = -1)
+        {
+            lock(this)
+            {
+                var result = GetChunk(timeout);
+                if (result == null)
+                    return string.Empty;
+
+                while (stream.DataAvailable)
+                {
+                    var read = GetChunk(timeout);
+                    if (read != null)
+                        result += read;
+                    else
+                        break;
+                }
+
+                return result;
+            }
+        }
 
         public void Interrupt()
         {

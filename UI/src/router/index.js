@@ -1,18 +1,24 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 import Home from '../views/Home.vue';
-import Settings from '../views/Settings.vue';
+import Board from '../components/Board.vue';
+import BoardEdit from '../components/BoardEdit.vue';
 Vue.use(VueRouter);
 const routes = [
     {
         path: '/',
         name: 'home',
         component: Home,
-    },
-    {
-        path: '/settings',
-        name: 'home',
-        component: Settings,
+        children: [
+            {
+                path: '',
+                component: Board,
+            },
+            {
+                path: 'edit',
+                component: BoardEdit,
+            }
+        ]
     },
 ];
 const router = new VueRouter({
