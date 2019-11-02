@@ -22,8 +22,6 @@
 
 <script>
 import { mapGetters } from 'vuex';
-// tslint:disable-next-line
-const { ipcRenderer } = require("electron");
 
 export default {
   data: () => ({
@@ -34,8 +32,11 @@ export default {
     ...mapGetters(['isStreaming']),
   },
   created() {
-    // this.register();
+    this.$ipc.on('isStreaming', this.onIsStreaming);
     // ipcRenderer.send("isStreaming");
+  },
+  destroyed() {
+    this.$ipc.removeListener('isStreaming', this.onIsStreaming);
   },
   methods: {
     update() {
@@ -46,17 +47,15 @@ export default {
       //   ipcRenderer.send("stopStream");
       // }
     },
-    register() {
-      ipcRenderer.on('isStreaming', (event, arg) => {
-        this.localCheckbox = !this.localCheckbox;
-        this.$nextTick(() => {
-          this.localCheckbox = arg;
-        });
-
-        this.$store.commit('setStreaming', arg);
-        this.pending = false;
+    onIsStreaming(event, arg) {
+      this.localCheckbox = !this.localCheckbox;
+      this.$nextTick(() => {
+        this.localCheckbox = arg;
       });
-    },
+
+      this.$store.commit('setStreaming', arg);
+      this.pending = false;
+    }
   },
 }
 </script>

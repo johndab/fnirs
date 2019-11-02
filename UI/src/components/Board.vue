@@ -24,31 +24,15 @@
 <script>
 import { mapGetters } from 'vuex';
 import Layout from './Layout';
-// tslint:disable-next-line
-const { ipcRenderer } = require("electron");
 
 export default {
   components: {
     Layout,
   },
-  data: () => ({
-
-  }),
   computed: {
     ...mapGetters(['layout']),
   },
-  created() {
-    this.register();
-    ipcRenderer.send('getConfig');
-  },
   methods: {
-    register() {
-      ipcRenderer.on('getConfig', (event, arg) => {
-        this.pending = false;
-        const layout = arg ? JSON.parse(arg) : '';
-        this.$store.commit('setLayout', layout);
-      });
-    },
     edit() {
       this.$router.push('/edit');
     },

@@ -19,32 +19,32 @@ namespace fNIRS.Services
 
         public void Register()
         {
-            //Electron.IpcMain.Upon("startStream", async (x) =>
-            //{
-            //    //adapter.RegisterStreamListener((y) =>
-            //    //{
-            //    //    Electron.IpcMain.SendMain("newDataPacket", y);
-            //    //});
+            Electron.IpcMain.Upon("startDataStream", async (x) =>
+            {
+               adapter.RegisterStreamListener((y) =>
+               {
+                  Electron.IpcMain.SendMain("newDataPacket", y);
+               });
 
-            //    //await adapter.StartStreaming();
-            //    var conn = adapter.IsStreaming();
-            //    Electron.IpcMain.SendMain("isStreaming", conn);
-            //});
+               await adapter.StartStreaming();
+               var conn = adapter.IsStreaming();
+               Electron.IpcMain.SendMain("isStreamingData", conn);
+            });
 
-            //Electron.IpcMain.Upon("stopStream", async (x) =>
-            //{
-            //    //await adapter.StopStreaming();
+            Electron.IpcMain.Upon("stopDataStream", async (x) =>
+            {
+               await adapter.StopStreaming();
 
-            //    //adapter.RemoveStreamListener();
-            //    var conn = adapter.IsStreaming();
-            //    Electron.IpcMain.SendMain("isStreaming", conn);
-            //});
+               adapter.RemoveStreamListener();
+               var conn = adapter.IsStreaming();
+               Electron.IpcMain.SendMain("isStreamingData", conn);
+            });
 
-            //Electron.IpcMain.Upon("isStreaming", (x) =>
-            //{
-            //    var conn = adapter.IsStreaming();
-            //    Electron.IpcMain.SendMain("isStreaming", conn);
-            //});
+            Electron.IpcMain.Upon("isStreamingData", (x) =>
+            {
+               var conn = adapter.IsStreaming();
+               Electron.IpcMain.SendMain("isStreamingData", conn);
+            });
         }
     }
 }

@@ -22,8 +22,6 @@
 
 <script>
 import { mapGetters } from 'vuex';
-// tslint:disable-next-line
-const { ipcRenderer } = require("electron");
 
 export default {
   data: () => ({
@@ -34,29 +32,30 @@ export default {
     ...mapGetters(['isConnected']),
   },
   created() {
-    this.register();
-    ipcRenderer.send("isConnected");
+    this.$ipc.on('isConnected', this.onIsConnected);
+    this.$ipc.send("isConnected");
+  },
+  destroyed() {
+    this.$ipc.removeListener('isConnected', this.onIsConnected);
   },
   methods: {
     update() {
       this.pending = true;
       if(!this.isConnected) {
-        ipcRenderer.send("hardwareConnect");
+        this.$ipc.send("hardwareConnect");
       } else {
-        ipcRenderer.send("hardwareDisconnect");
+        this.$ipc.send("hardwareDisconnect");
       }
     },
-    register() {
-      ipcRenderer.on('isConnected', (event, arg) => {
-        this.localCheckbox = !this.localCheckbox;
-        this.$nextTick(() => {
-          this.localCheckbox = arg;
-        });
-
-        this.$store.commit('setConnected', arg);
-        this.pending = false;
+    onIsConnected(event, arg) {
+      this.localCheckbox = !this.localCheckbox;
+      this.$nextTick(() => {
+        this.localCheckbox = arg;
       });
-    },
+
+      this.$store.commit('setConnected', arg);
+      this.pending = false;
+    }
   },
 }
 </script>

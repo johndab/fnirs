@@ -18,8 +18,6 @@
 
 <script>
 import { mapGetters } from 'vuex';
-// tslint:disable-next-line
-const { ipcRenderer } = require("electron");
 
 export default {
   data: () => ({
@@ -46,30 +44,35 @@ export default {
   created() {
     this.register();
     if(this.isConnected) {
-      this.getFrequencies();
+      this.requestFrequencies();
     }
   },
+  destroyed() {
+    this.$ipc.removeListener("getFrequencies", this.getFrequencies);
+    this.$ipc.removeListener("getFrequency", this.getFrequency);
+  },
   methods: {
-    getFrequencies() {
-      ipcRenderer.send("getFrequencies");
-      ipcRenderer.send("getFrequency");
+    requestFrequencies() {
+      this.$ipc.send("getFrequencies");
+      this.$ipc.send("getFrequency");
     },
     update() {
       this.pending = true;
-      ipcRenderer.send('setFrequency', this.frequency);
+      this.$ipc.send('setFrequency', this.frequency);
     },
     register() {
-      ipcRenderer.on('getFrequencies', (event, arg) => {
-        this.frequencies = arg;
-      });
-      ipcRenderer.on('getFrequency', (event, arg) => {
-        console.debug(arg);
-        this.pending = false;
-        this.frequency = arg;
-      });
+      this.$ipc.on('getFrequencies', this.getFrequencies);
+      this.$ipc.on('getFrequency', this.getFrequency);
+    },
+    getFrequencies(event, arg) {
+      this.frequencies = arg;
+    },
+    getFrequency(event, arg) {
+      this.pending = false;
+      this.frequency = arg;
     },
     setFrequency(f) {
-      ipcRenderer.send('setFrequency', f);
+      this.$ipc.send('setFrequency', f);
     }
   },
 }

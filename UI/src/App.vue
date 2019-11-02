@@ -4,14 +4,6 @@
   </div>
 </template>
 
-<script lang="ts">
-import { Component, Vue } from 'vue-property-decorator';
-
-@Component({
-})
-export default class App extends Vue {}
-</script>
-
 <style lang="scss">
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
@@ -20,4 +12,7 @@ export default class App extends Vue {}
   text-align: center;
   color: #2c3e50;
 }
+
+$ionicons-font-path: '~ionicons/dist/fonts';
+@import "~ionicons/dist/scss/ionicons";
 </style>

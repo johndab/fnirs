@@ -25,11 +25,11 @@ namespace fNIRS
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc();
+            services.AddControllers();
 
             services.AddSpaStaticFiles(configuration =>
             {
-                configuration.RootPath = "./UI/dist";
+                configuration.RootPath = "UI/dist";
             });
 
             var demo = Configuration.GetValue("ISSAdapter:demo", false);
@@ -46,22 +46,16 @@ namespace fNIRS
             );
         }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app)
         {
             app.UseSpaStaticFiles();
 
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-                app.UseBrowserLink();
-            }
-
+            app.UseRouting();
             app.UseStaticFiles();
-
-            app.UseMvc();
 
             app.UseSpa(spa =>
             {
+                spa.Options.SourcePath = "UI";
                 spa.UseProxyToSpaDevelopmentServer("http://localhost:8080");
             });
 
@@ -85,10 +79,10 @@ namespace fNIRS
                 {
                     Width = 1152,
                     Height = 864,
-                    Show = false,
+                    Show = true,
                 });
 
-            browserWindow.OnReadyToShow += () => browserWindow.Show();
+            // browserWindow.OnReadyToShow += () => browserWindow.Show();
             browserWindow.SetTitle("fNIRS Monitoring");
         }
     }

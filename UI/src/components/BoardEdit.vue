@@ -12,14 +12,14 @@
         <button 
           class="btn btn-success btn-sm mx-1"
           style="width: 120px"
-          :disabled="pending"
+          :disabled="layoutPending"
           @click="save"
         >
           Save
         </button>
 
         <BSpinner
-          v-if="pending"
+          v-if="layoutPending"
           small
         />
       </div>
@@ -43,6 +43,34 @@
             </button>
           </div>
         </div>
+        <div class="mt-1">
+          <BButtonGroup>
+            <BButton 
+              class="btn btn-sm"
+              :variant="type === 'source' ? 'secondary' : 'outline-secondary'"
+              type="button"
+              @click="type = 'source'"
+            >
+              <i 
+                class="ion ion-md-square-outline pr-1" 
+                style="font-size: 16px; position: relative; top: 1px"
+              />
+              Source
+            </BButton>
+            <BButton 
+              class="btn btn-sm"
+              :variant="type === 'detector' ? 'secondary' : 'outline-secondary'"
+              type="button"
+              @click="type = 'detector'"
+            >
+              <i 
+                class="ion ion-md-radio-button-off pr-1" 
+                style="font-size: 16px; position: relative; top: 1px"
+              />
+              Detector
+            </BButton>
+          </BButtonGroup>
+        </div>
       </form>
     </div>
     <Layout 
@@ -55,8 +83,7 @@
 
 <script>
 import Layout from './Layout';
-// tslint:disable-next-line
-const { ipcRenderer } = require("electron");
+import { mapGetters } from 'vuex';
 
 export default {
   components: {
@@ -66,36 +93,34 @@ export default {
     layout: [],
     address: '',
     pending: false,
+    type: 'source',
   }),
-  mounted() {
-    this.register();
-    ipcRenderer.send('getConfig');
+  computed: mapGetters(['layoutPending']),
+  watch: {
+    layoutPending(v) {
+      if(!v) {
+        this.$router.push('/');
+      }
+    }
   },
   methods: {
-    register() {
-      ipcRenderer.on('getConfig', (event, arg) => {
-        this.pending = false;
-        this.layout = arg ? JSON.parse(arg) : [];
-        this.$store.commit('setLayout', this.layout);
-      });
-    },
     cancel() {
       this.$router.push('/');
     },
     add() {
+      const i = this.layout.length + 1;
       this.layout.push({
-        i: this.layout.length,
+        i: i,
         x: 10,
         y: 10,
-        w: this.size,
-        h: this.size,
+        type: this.type,
         address: this.address,
       });
       this.address = '';
     },
     save() {
-      this.pending = true;
-      ipcRenderer.send('saveConfig', JSON.stringify(this.layout));
+      this.$store.commit('setLayoutPending', true);
+      this.$ipc.send('saveConfig', JSON.stringify(this.layout));
     },
   },
 }
