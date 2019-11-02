@@ -9,13 +9,13 @@ import 'bootstrap-vue/dist/bootstrap-vue.css'
 import demoIpc from './demoIpc';
 
 // tslint:disable-next-line
-// const { ipcRenderer } = require("electron");
+const { ipcRenderer } = require("electron");
 
 Vue.use(BootstrapVue)
 Vue.config.productionTip = false;
 
-// Vue.prototype.$ipc = ipcRenderer;
-Vue.prototype.$ipc = demoIpc;
+Vue.prototype.$ipc = ipcRenderer;
+// Vue.prototype.$ipc = demoIpc;
 
 new Vue({
   router,

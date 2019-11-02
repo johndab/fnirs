@@ -33,19 +33,19 @@ export default {
   },
   created() {
     this.$ipc.on('isStreaming', this.onIsStreaming);
-    // ipcRenderer.send("isStreaming");
+    this.$ipc.send("isStreaming"); 
   },
   destroyed() {
     this.$ipc.removeListener('isStreaming', this.onIsStreaming);
   },
   methods: {
     update() {
-      // this.pending = true;
-      // if(!this.isStreaming) {
-      //   ipcRenderer.send("startStream");
-      // } else {
-      //   ipcRenderer.send("stopStream");
-      // }
+      this.pending = true;
+      if(!this.isStreaming) {
+        this.$ipc.send("startDataStream");
+      } else {
+        this.$ipc.send("stopDataStream");
+      }
     },
     onIsStreaming(event, arg) {
       this.localCheckbox = !this.localCheckbox;

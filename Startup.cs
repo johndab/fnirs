@@ -59,16 +59,16 @@ namespace fNIRS
                 spa.UseProxyToSpaDevelopmentServer("http://localhost:8080");
             });
 
-            if (HybridSupport.IsElectronActive)
-            {
-                ElectronBootstrap();
-            }
-
             var services = app.ApplicationServices.GetServices<IService>();
             foreach(var service in services)
             {
                 Console.WriteLine(service.GetType().FullName);
                 service.Register();
+            }
+
+            if (HybridSupport.IsElectronActive)
+            {
+                ElectronBootstrap();
             }
         }
 

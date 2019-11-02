@@ -32,10 +32,19 @@ export default {
   computed: {
     ...mapGetters(['layout']),
   },
+  created() {
+    this.$ipc.on('newDataPacket', this.onNewData);
+  },
+  destroyed() {
+    this.$ipc.removeListener('newDataPacket', this.onNewData);
+  },
   methods: {
     edit() {
       this.$router.push('/edit');
     },
+    onNewData(ev, arg) {
+      console.debug(arg);
+    }
   },
 }
 </script>

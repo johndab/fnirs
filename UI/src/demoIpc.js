@@ -1,6 +1,4 @@
 
-let config = '';
-
 const registered = { 
 }
 
@@ -16,14 +14,15 @@ export default {
   },
   send(channel, x) {
     if(channel === 'getConfig') {
+      const config = localStorage.getItem('config');
       registered[channel].forEach((fun) => {
         fun({}, config);
       });
     } else if(channel === 'saveConfig') {
-      config = x;
+      localStorage.setItem('config', x);
       setTimeout(() => {
         registered['getConfig'].forEach((fun) => {
-          fun({}, config);
+          fun({}, x);
         });
       }, 1000);
     }

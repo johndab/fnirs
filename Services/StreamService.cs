@@ -28,7 +28,7 @@ namespace fNIRS.Services
 
                await adapter.StartStreaming();
                var conn = adapter.IsStreaming();
-               Electron.IpcMain.SendMain("isStreamingData", conn);
+               Electron.IpcMain.SendMain("isStreaming", conn);
             });
 
             Electron.IpcMain.Upon("stopDataStream", async (x) =>
@@ -37,13 +37,13 @@ namespace fNIRS.Services
 
                adapter.RemoveStreamListener();
                var conn = adapter.IsStreaming();
-               Electron.IpcMain.SendMain("isStreamingData", conn);
+               Electron.IpcMain.SendMain("isStreaming", conn);
             });
 
-            Electron.IpcMain.Upon("isStreamingData", (x) =>
+            Electron.IpcMain.Upon("isStreaming", (x) =>
             {
                var conn = adapter.IsStreaming();
-               Electron.IpcMain.SendMain("isStreamingData", conn);
+               Electron.IpcMain.SendMain("isStreaming", conn);
             });
         }
     }

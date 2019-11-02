@@ -132,6 +132,9 @@ export default {
       }
     }
   },
+  created() {
+    this.layout = this.$store.getters.layout.slice();
+  },
   methods: {
     cancel() {
       this.$router.push('/');

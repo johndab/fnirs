@@ -6,6 +6,7 @@
     @mousedown="mouseDown"
   >
     <GridLayout
+      v-if="internalLayout && internalLayout.length > 0"
       ref="layout"
       :layout.sync="internalLayout"
       :col-num="colNum"
@@ -97,8 +98,11 @@ export default {
     window.addEventListener('resize', handleResize);
   },
   created() {
-    document.addEventListener('mousemove', this.mouseMove);
-    document.addEventListener('mouseup', this.mouseUp);
+    this.refreshLayout();
+    if (this.editable) {
+      document.addEventListener('mousemove', this.mouseMove);
+      document.addEventListener('mouseup', this.mouseUp);
+    }
   },
   destroyed() {
     document.removeEventListener('mousemove', this.mouseMove);
@@ -142,6 +146,7 @@ export default {
       });
     },
     mouseDown(e) {
+      if(!this.editable) return;
       // grid item clicked
       const itemEl = e.target.closest('.grid-item');
       if(itemEl) {
