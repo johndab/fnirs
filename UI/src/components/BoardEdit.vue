@@ -24,9 +24,9 @@
         />
       </div>
 
-      <form @submit.prevent="add">
+      <form @submit.prevent="submit">
         <div class="d-flex">
-          <div>
+          <div class="flex-grow-1">
             <BFormInput
               v-model="address" 
               size="sm"
@@ -39,12 +39,17 @@
               style="width: 100px"
               type="submit"
             >
-              Add
+              <span v-if="edited">
+                Save
+              </span>
+              <span v-else>
+                Add
+              </span>
             </button>
           </div>
         </div>
-        <div class="mt-1">
-          <BButtonGroup>
+        <div class="mt-1 d-flex justify-content-between">
+          <BButtonGroup class="mr-2">
             <BButton 
               class="btn btn-sm"
               :variant="type === 'source' ? 'secondary' : 'outline-secondary'"
@@ -70,6 +75,27 @@
               Detector
             </BButton>
           </BButtonGroup>
+          <div 
+            v-if="edited"
+            class="mr-1"
+          >
+            <button 
+              class="btn btn-danger btn-sm"
+              type="type"
+              @click="remove"
+            >
+              Remove
+            </button>
+          </div>
+          <div v-if="edited">
+            <button 
+              class="btn btn-secondary btn-sm"
+              type="type"
+              @click="edited = null; address = ''"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       </form>
     </div>
@@ -77,6 +103,8 @@
       class="flex-grow-1"
       :layout.sync="layout"
       :editable="true"
+      :edited="edited ? edited.i : null"
+      @edit="edit"
     />
   </div>
 </template>
@@ -92,8 +120,9 @@ export default {
   data: () => ({
     layout: [],
     address: '',
-    pending: false,
     type: 'source',
+    pending: false,
+    edited: null,
   }),
   computed: mapGetters(['layoutPending']),
   watch: {
@@ -107,16 +136,42 @@ export default {
     cancel() {
       this.$router.push('/');
     },
-    add() {
-      const i = this.layout.length + 1;
-      this.layout.push({
-        i: i,
-        x: 10,
-        y: 10,
-        type: this.type,
-        address: this.address,
-      });
+    edit(item) {
+      this.edited = item;
+      this.address = this.edited.address;
+      this.type = this.edited.type;
+    },
+    remove() {
+      this.layout = this.layout.filter(l => l.i !== this.edited.i);
       this.address = '';
+      this.type = 'source';
+      this.edited = null;
+    },
+    submit() {
+      if(!this.edited) {
+        const i = this.layout.length + 1;
+        this.layout.push({
+          i: i,
+          x: -1,
+          y: -1,
+          type: this.type,
+          address: this.address,
+        });
+        this.address = '';
+      } else {
+        const node = this.layout.find(l => l.i === this.edited.i)
+        this.layout = this.layout.filter(l => l.i !== this.edited.i);
+        this.layout.push({
+          i: node.i,
+          x: node.x,
+          y: node.y,
+          address: this.address,
+          type: this.type,
+        });
+        this.edited = null;
+        this.address = '';
+        this.type = 'source';
+      }
     },
     save() {
       this.$store.commit('setLayoutPending', true);
