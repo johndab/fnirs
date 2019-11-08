@@ -5,19 +5,21 @@ using System.Text;
 using System.Threading;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using fNIRS.Hardware.Models;
+using System.Runtime.InteropServices;
 
 namespace fNIRS.Hardware.ISS
 {
     public class DataReader
     {
         private Thread thread;
-        private int TIMEOUT = 1000;
         private const int BUFFER_SIZE = 256;
         private NetworkStream stream;
         private Byte[] buffer = new Byte[BUFFER_SIZE];
-        private List<Byte> packet = new List<Byte>();
         private DataPacket currentPacket;
+        private int dataPacketSize = 0;
+        private int packetIndex = 0;
 
         private bool streaming = false;
         private bool started = false;
@@ -25,10 +27,12 @@ namespace fNIRS.Hardware.ISS
         private Action<DataPacket> newPacketAction;
 
         public bool IsAlive { get; private set; }
+        private ILogger logger { get; }
 
-        public DataReader(NetworkStream stream)
+        public DataReader(NetworkStream stream, ILogger logger)
         {
             this.stream = stream;
+            this.logger = logger;
         }
 
         public void Start()
@@ -40,8 +44,8 @@ namespace fNIRS.Hardware.ISS
 
         public void StartStreaming()
         {
-            if (!started) Start();
             this.streaming = true;
+            if (!started) Start();
         }
 
         public void StopStreaming()
@@ -63,46 +67,107 @@ namespace fNIRS.Hardware.ISS
             this.newPacketAction = null;
         }
 
-        protected void Run()
+        protected unsafe void Run()
         {
-            RunAsync().Wait();
-        }
+            int HEADER_SIZE = Marshal.SizeOf(typeof(HEADERDATA6));
+            int CYCLE_SIZE = Marshal.SizeOf(typeof(CYCLEDATA6));
+            int DC_IMAGE_SIZE = Marshal.SizeOf(typeof(DCrealimage_2D));
 
-        protected async Task RunAsync()
-        {
-            while (thread.IsAlive && stream.CanRead)
+
+            while (thread.IsAlive && stream.CanRead && streaming)
             {
-                if (!streaming)
+                if (!this.blockStarted)
                 {
-                    var chunk = GetChunk(TIMEOUT);
-                    if (chunk != null)
+                    var startMessage = ReadTo(Constants.DMC_DATA_STARTS_TAG);
+                    byte[] pattern = Encoding.ASCII.GetBytes(Constants.DMC_DATA_STARTS_TAG);
+                    var index = PatternAt(buffer, pattern);
+                    byte[] lineEnd = new byte[] { 13, 10 };
+                    index = PatternAt(buffer, lineEnd, index) + 2;
+
+                    if (startMessage.Length > 0)
                     {
-                        Console.Write(chunk);
+                        this.currentPacket = GetPacketData(startMessage);
+                        this.dataPacketSize = currentPacket.Size;
+                        this.currentPacket.Data = new byte[this.dataPacketSize];
+                        int len = buffer.Length - index;
+                        Array.Copy(buffer, index, currentPacket.Data, 0, len);
+                        currentPacket.DataIndex = len;
+                        this.blockStarted = true;
+                    } else {
+                        logger.LogCritical("Invalid block start");
+                        return;
                     }
                 }
                 else
                 {
-                    if (!this.blockStarted)
-                    {
-                        var startMessage = ReadTo(Constants.DMC_BINARY_DATA_STARTS);
+                    var bytes = stream.Read(buffer, 0, buffer.Length);
+                    var len = Math.Min(currentPacket.Size - currentPacket.DataIndex, buffer.Length);
+                    if(len > 0) {
+                        Array.Copy(buffer, 0, currentPacket.Data, currentPacket.DataIndex, len);
+                        currentPacket.DataIndex += len;
+                    }
 
-                        if (startMessage.Length > 0)
+                    if(currentPacket.Header == null)
+                    {
+                        if(currentPacket.DataIndex > HEADER_SIZE)
                         {
-                            this.currentPacket = await GetPacketData(startMessage);
-                            this.blockStarted = true;
+                            currentPacket.Header = ByteArrayToStructure<HEADERDATA6>(currentPacket.Data, 0);
+                            currentPacket.ReadIndex = HEADER_SIZE;
+                        }
+                    } 
+                    else 
+                    {
+                        if(currentPacket.DataIndex - currentPacket.ReadIndex > CYCLE_SIZE) 
+                        {
+                            var cycle = ByteArrayToStructure<CYCLEDATA6>(currentPacket.Data, currentPacket.ReadIndex);
+                            logger.LogCritical(
+                                cycle.CycleNumber1.ToString() + " " + cycle.CycleNumber2.ToString() + "\n"
+                                + cycle.MagicNumber1.ToString() + " " + cycle.MagicNumber2.ToString()
+                            );
+                            currentPacket.Cycles.Add(cycle);
+                            currentPacket.ReadIndex += CYCLE_SIZE;
                         }
                     }
-                    else
+
+                    if(len < buffer.Length)
                     {
-                        var end = ReadTo(Constants.DMC_BINARY_DATA_ENDS);
+                        logger.LogCritical("Data packed full " + currentPacket.Index);
+                        this.blockStarted = false;
                         if(newPacketAction != null)
-                                newPacketAction.Invoke(this.currentPacket);
+                            newPacketAction.Invoke(this.currentPacket);
+
+                        this.currentPacket = new DataPacket();
+                        this.currentPacket.Data = new byte[this.dataPacketSize];
+
+                        Array.Copy(buffer, len, currentPacket.Data, 0, buffer.Length - len);
+                        currentPacket.DataIndex += buffer.Length - len;
                     }
+
                 }
             }
         }
 
-        private async Task<DataPacket> GetPacketData(string data)
+        public static int PatternAt(byte[] source, byte[] pattern, int start = 0)
+        {
+            for (int i = start; i < source.Length; i++)
+            {
+                if (source.Skip(i).Take(pattern.Length).SequenceEqual(pattern))
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        private unsafe T ByteArrayToStructure<T>(byte[] bytes, int start) where T : struct
+        {
+            fixed (byte* ptr = &bytes[start])
+            {
+                return (T)Marshal.PtrToStructure((IntPtr)ptr, typeof(T));
+            }
+        }
+
+        private DataPacket GetPacketData(string data)
         {
             string[] rows = data.Split("\n");
             if (rows.Length == 0) return null;
@@ -137,7 +202,7 @@ namespace fNIRS.Hardware.ISS
                 {
                     var chunk = GetChunkAsync();
                     chunk.Wait();
-                    result += chunk;
+                    result += chunk.Result;
                     var index = result.IndexOf(key);
                     if (index > -1)
                     {

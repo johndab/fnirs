@@ -89,8 +89,8 @@ namespace fNIRS.Hardware.ISS
         //Define some outbound message tags which might be acted on by client
         //Note: also there are a number of 000 message types that are not intended as
         //machine information, such as the help text.
-        public static string DMC_BINARY_DATA_STARTS = "DataPacket Starts\r\n";
-        public static string DMC_BINARY_DATA_ENDS = "DataPacket Ends";
+        // public static string DMC_BINARY_DATA_STARTS = "DataPacket Starts\r\n";
+        // public static string DMC_BINARY_DATA_ENDS = "DataPacket Ends";
 
 
         public static string DMC_DATA_STARTS_TAG = "100 Data Starts:";

@@ -5,6 +5,7 @@
     <StartupObject>fNIRS.Program</StartupObject>
     <RootNamespace>fNIRS</RootNamespace>
     <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

@@ -45,7 +45,7 @@ namespace fNIRS.Hardware.ISS
             {
                 this.client = new TcpClient(host, port);
                 this.stream = client.GetStream();
-                this.reader = new DataReader(stream);
+                this.reader = new DataReader(stream, logger);
 
                 Hello();
                 this.connected = true;
