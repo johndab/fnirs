@@ -8,8 +8,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using ElectronNET.API;
+using Newtonsoft.Json;
 using fNIRS.Hardware.ISS;
-
+using fNIRS.Hardware.Models;
 
 namespace fNIRS
 {
@@ -20,7 +21,7 @@ namespace fNIRS
             // 
             // Console.WriteLine(size);
             Test();
-            //CreateWebHostBuilder(args).Build().Run();
+            // CreateWebHostBuilder(args).Build().Run();
         }
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
@@ -34,16 +35,22 @@ namespace fNIRS
             var adapter = GetIISAdapter();
             adapter.Connect();
 
-            adapter.RegisterStreamListener((packet) =>
+            using (StreamWriter file = new StreamWriter(@"C:\dev\fNIRS\app\data-log.json"))
             {
-                Console.WriteLine(packet.Index);
-            });
-            
-            adapter.StartStreaming().Wait();
+                adapter.RegisterStreamListener((packet) =>
+                {
+                    file.WriteLine("\n");
 
-            Console.ReadLine();
-            adapter.StopStreaming().Wait();
-            Console.WriteLine("Streaming stopped");
+                    var json = JsonConvert.SerializeObject(packet);
+                    file.WriteLine(json);
+                });
+                
+                adapter.StartStreaming().Wait();
+
+                Console.ReadLine();
+                adapter.StopStreaming().Wait();
+                Console.WriteLine("Streaming stopped");
+            }
             adapter.Disconnect().Wait();
             Console.WriteLine("Disconnected");
         }

@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using fNIRS.Hardware.Models;
 using System.Runtime.InteropServices;
+using fNIRS.Hardware.ISS.Converters;
+using System.Diagnostics;
 
 namespace fNIRS.Hardware.ISS
 {
@@ -28,6 +30,7 @@ namespace fNIRS.Hardware.ISS
 
         public bool IsAlive { get; private set; }
         private ILogger logger { get; }
+        private Stopwatch sw = new Stopwatch();
 
         public DataReader(NetworkStream stream, ILogger logger)
         {
@@ -86,6 +89,7 @@ namespace fNIRS.Hardware.ISS
 
                     if (startMessage.Length > 0)
                     {
+                        sw.Start();
                         this.currentPacket = GetPacketData(startMessage);
                         this.dataPacketSize = currentPacket.Size;
                         this.currentPacket.Data = new byte[this.dataPacketSize];
@@ -111,7 +115,7 @@ namespace fNIRS.Hardware.ISS
                     {
                         if(currentPacket.DataIndex > HEADER_SIZE)
                         {
-                            currentPacket.Header = ByteArrayToStructure<HEADERDATA6>(currentPacket.Data, 0);
+                            currentPacket.Header = currentPacket.Data.ToStructure<HEADERDATA6>(0);
                             currentPacket.ReadIndex = HEADER_SIZE;
                         }
                     } 
@@ -119,12 +123,23 @@ namespace fNIRS.Hardware.ISS
                     {
                         if(currentPacket.DataIndex - currentPacket.ReadIndex > CYCLE_SIZE) 
                         {
-                            var cycle = ByteArrayToStructure<CYCLEDATA6>(currentPacket.Data, currentPacket.ReadIndex);
-                            logger.LogCritical(
-                                cycle.CycleNumber1.ToString() + " " + cycle.CycleNumber2.ToString() + "\n"
-                                + cycle.MagicNumber1.ToString() + " " + cycle.MagicNumber2.ToString()
-                            );
-                            currentPacket.Cycles.Add(cycle);
+                            var cycle = currentPacket.Data.ToStructure<CYCLEDATA6>(currentPacket.ReadIndex);                            
+                            var cycleData = cycle.ToModel();
+
+                            // cycle.view_2D_sw32
+                            // for(int i =0; i<); i++)
+                            // {
+                                // var cycleData = ByteArrayToStructure<CYCLEDATA6>(cycle.view_2D_sw32, 0);
+                            //     DCrealimage_2D Marshal.PtrToStructure((IntPtr)ptr, typeof(T))
+                            // }
+                            
+                            // Console.WriteLine(
+                            //     cycle.CycleNumber1.ToString() + " " + cycle.CycleNumber2.ToString() + "\n"
+                            //     + cycle.MagicNumber1.ToString() + " " + cycle.MagicNumber2.ToString()
+                            // );
+                            // Console.WriteLine(cycleData.DCData.Length);
+                            
+                            currentPacket.Cycles.Add(cycleData);
                             currentPacket.ReadIndex += CYCLE_SIZE;
                         }
                     }
@@ -135,6 +150,13 @@ namespace fNIRS.Hardware.ISS
                         this.blockStarted = false;
                         if(newPacketAction != null)
                             newPacketAction.Invoke(this.currentPacket);
+
+                        sw.Stop();
+                        Console.WriteLine("Elapsed = {0}", sw.Elapsed.Milliseconds);
+                        var num = (1000 / sw.Elapsed.Milliseconds);
+                        Console.WriteLine("In 1 sec: {0}", num);
+
+                        // sw.Elapsed.TotalMilliseconds
 
                         this.currentPacket = new DataPacket();
                         this.currentPacket.Data = new byte[this.dataPacketSize];
@@ -157,6 +179,11 @@ namespace fNIRS.Hardware.ISS
                 }
             }
             return -1;
+        }
+
+        public void SaveCycleData(CYCLEDATA6 Cycle)
+        {
+            
         }
 
         private unsafe T ByteArrayToStructure<T>(byte[] bytes, int start) where T : struct
@@ -183,7 +210,7 @@ namespace fNIRS.Hardware.ISS
             var index = int.Parse(indexAndTime[1].Replace("#", ""));
             var time = indexAndTime[4].Replace("sent=", "");
 
-            Console.WriteLine(row);
+            // Console.WriteLine(row);
             return new DataPacket()
             {
                 Index = index,

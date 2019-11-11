@@ -92,10 +92,26 @@ namespace fNIRS.Hardware.ISS
     [StructLayout(LayoutKind.Sequential, Pack=1)]
     public unsafe struct DCrealimage_2D
     {
-        double DC; // 8 bytes
-        fixed double real[2]; // 8 * 2 bytes
-        fixed double imag[2]; // 8 * 2 bytes
-   };
+        public double DC; // 8 bytes
+        public fixed double real[2]; // 8 * 2 bytes
+        public fixed double imag[2]; // 8 * 2 bytes
+    };
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public unsafe struct DCrealimage_4D
+    {
+        public double DC; 
+        public fixed double real[4];
+        public fixed double imag[4];
+    };
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public unsafe struct DCrealimage_8D
+    {
+        public double DC;
+        public fixed double real[8];
+        public fixed double imag[8];
+    };
 
 
     [StructLayout(LayoutKind.Sequential, Pack=1)]
@@ -103,7 +119,7 @@ namespace fNIRS.Hardware.ISS
     {
 	  public uint CycleNumber1;
 	  public uint MagicNumber1;  //7 lsb should be 1234567890, high byte is copy of cycle number
-	  short sw_mode; // used to interpret data union below
+	  public short sw_mode; // used to interpret data union below
 	  short pad1;
 	  short pad2;
 	  //Raw waveform data the ADC and Mux channels for the raw data are determined in USER_SET6
@@ -120,7 +136,7 @@ namespace fNIRS.Hardware.ISS
 
 // DCrealimage_8D view_8D_sw8[max_DATAPACKET6_a2d_chns][max_DATAPACKET6_8D_SW8_ext_mux_chns];
 // 	DCrealimage_4D view_4D_sw16[max_DATAPACKET6_a2d_chns][max_DATAPACKET6_4D_SW16_ext_mux_chns];
-      fixed byte view_2D_sw32[40 * Const.max_DATAPACKET6_a2d_chns * Const.max_DATAPACKET6_2D_SW32_ext_mux_chns];
+      public fixed byte cc_wfdata[40 * Const.max_DATAPACKET6_a2d_chns * Const.max_DATAPACKET6_2D_SW32_ext_mux_chns];
 	  public uint CycleNumber2;
 	  public uint MagicNumber2;  //7 lsb should be 1234567890, high byte is copy of cycle number
     }
