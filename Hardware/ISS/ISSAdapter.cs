@@ -24,7 +24,7 @@ namespace fNIRS.Hardware.ISS
         private readonly int port;
         private bool connected = false;
 
-        private const int HELLO_TIMEOUT = 10000;
+        private const int HELLO_TIMEOUT = 2000;
         private DataReader reader;
 
 

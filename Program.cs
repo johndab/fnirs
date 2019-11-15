@@ -18,10 +18,8 @@ namespace fNIRS
     {
         public static void Main(string[] args)
         {
-            // 
-            // Console.WriteLine(size);
-            Test();
-            // CreateWebHostBuilder(args).Build().Run();
+            // Test();
+            CreateWebHostBuilder(args).Build().Run();
         }
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>

@@ -78,7 +78,7 @@ namespace fNIRS.Hardware.ISS
 
             FillBuffer();
             
-            while (thread.IsAlive && stream.CanRead && streaming)
+            while (thread.IsAlive && stream.CanRead)
             {
                 if (!this.blockStarted)
                 {
@@ -146,7 +146,7 @@ namespace fNIRS.Hardware.ISS
                         sw.Stop();
                         Console.WriteLine("Elapsed = {0}", sw.Elapsed.Milliseconds);
                         var num = (1000.0 / sw.Elapsed.Milliseconds);
-                        Console.WriteLine("In {0}/sec: ", num);
+                        Console.WriteLine("{0}/sec: ", num);
 
                         // Find line end after "Data End:" message
                         var msg = Encoding.ASCII.GetString(buffer, len, (buffer.Length-len));

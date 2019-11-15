@@ -37,7 +37,7 @@ export default {
   watch: {
     isConnected(c) {
       if(c) {
-        this.getFrequencies();
+        this.requestFrequencies();
       }
     }
   },
@@ -65,7 +65,8 @@ export default {
       this.$ipc.on('getFrequency', this.getFrequency);
     },
     getFrequencies(event, arg) {
-      this.frequencies = arg;
+      console.debug(arg);
+      this.frequencies = arg || [];
     },
     getFrequency(event, arg) {
       this.pending = false;
