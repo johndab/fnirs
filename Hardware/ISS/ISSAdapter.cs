@@ -61,6 +61,7 @@ namespace fNIRS.Hardware.ISS
         public void Hello()
         {
             var result = reader.ReadAvailable(HELLO_TIMEOUT);
+            Console.WriteLine(result);
             if (string.IsNullOrEmpty(result))
                 throw new ConnectionException($"Server does not responded in {HELLO_TIMEOUT} ms");
 
@@ -104,8 +105,8 @@ namespace fNIRS.Hardware.ISS
 #region STREAMING
         public async Task StartStreaming()
         {
-            this.reader.Start();
             this.reader.StartStreaming();
+            Console.WriteLine("Streaming started");
             await Send(Constants.DMC_START);
         }
 

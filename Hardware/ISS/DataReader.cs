@@ -15,13 +15,14 @@ namespace fNIRS.Hardware.ISS
 {
     public class DataReader
     {
-        private Thread thread;
         private const int BUFFER_SIZE = 256;
+        private byte[] LINE_END = new byte[] { 13, 10 };
+
+        private Thread thread;
         private NetworkStream stream;
-        private Byte[] buffer = new Byte[BUFFER_SIZE];
+
+        private byte[] buffer = new byte[BUFFER_SIZE];
         private DataPacket currentPacket;
-        private int dataPacketSize = 0;
-        private int packetIndex = 0;
 
         private bool streaming = false;
         private bool started = false;
@@ -74,25 +75,29 @@ namespace fNIRS.Hardware.ISS
         {
             int HEADER_SIZE = Marshal.SizeOf(typeof(HEADERDATA6));
             int CYCLE_SIZE = Marshal.SizeOf(typeof(CYCLEDATA6));
-            int DC_IMAGE_SIZE = Marshal.SizeOf(typeof(DCrealimage_2D));
 
-
+            FillBuffer();
+            
             while (thread.IsAlive && stream.CanRead && streaming)
             {
                 if (!this.blockStarted)
                 {
+                    // Read the response from the server 
                     var startMessage = ReadTo(Constants.DMC_DATA_STARTS_TAG);
                     byte[] pattern = Encoding.ASCII.GetBytes(Constants.DMC_DATA_STARTS_TAG);
                     var index = PatternAt(buffer, pattern);
-                    byte[] lineEnd = new byte[] { 13, 10 };
-                    index = PatternAt(buffer, lineEnd, index) + 2;
+                    index = PatternAt(buffer, LINE_END, index);
 
-                    if (startMessage.Length > 0)
+                    if (index > 0)
                     {
+                        index += 2;
+                        // start stopwatch
                         sw.Start();
+
                         this.currentPacket = GetPacketData(startMessage);
-                        this.dataPacketSize = currentPacket.Size;
-                        this.currentPacket.Data = new byte[this.dataPacketSize];
+                        this.currentPacket.Data = new byte[this.currentPacket.Size];
+                        
+                        // copy the rest of bytes to the packet data array
                         int len = buffer.Length - index;
                         Array.Copy(buffer, index, currentPacket.Data, 0, len);
                         currentPacket.DataIndex = len;
@@ -104,7 +109,7 @@ namespace fNIRS.Hardware.ISS
                 }
                 else
                 {
-                    var bytes = stream.Read(buffer, 0, buffer.Length);
+                    var bytes = FillBuffer();
                     var len = Math.Min(currentPacket.Size - currentPacket.DataIndex, buffer.Length);
                     if(len > 0) {
                         Array.Copy(buffer, 0, currentPacket.Data, currentPacket.DataIndex, len);
@@ -121,50 +126,43 @@ namespace fNIRS.Hardware.ISS
                     } 
                     else 
                     {
-                        if(currentPacket.DataIndex - currentPacket.ReadIndex > CYCLE_SIZE) 
+                        if(currentPacket.DataIndex - currentPacket.ReadIndex >= CYCLE_SIZE) 
                         {
-                            var cycle = currentPacket.Data.ToStructure<CYCLEDATA6>(currentPacket.ReadIndex);                            
-                            var cycleData = cycle.ToModel();
+                            var cycle = currentPacket.Data.ToStructure<CYCLEDATA6>(currentPacket.ReadIndex);
 
-                            // cycle.view_2D_sw32
-                            // for(int i =0; i<); i++)
-                            // {
-                                // var cycleData = ByteArrayToStructure<CYCLEDATA6>(cycle.view_2D_sw32, 0);
-                            //     DCrealimage_2D Marshal.PtrToStructure((IntPtr)ptr, typeof(T))
-                            // }
-                            
-                            // Console.WriteLine(
-                            //     cycle.CycleNumber1.ToString() + " " + cycle.CycleNumber2.ToString() + "\n"
-                            //     + cycle.MagicNumber1.ToString() + " " + cycle.MagicNumber2.ToString()
-                            // );
-                            // Console.WriteLine(cycleData.DCData.Length);
-                            
+                            var cycleData = cycle.ToModel();
                             currentPacket.Cycles.Add(cycleData);
+
                             currentPacket.ReadIndex += CYCLE_SIZE;
                         }
                     }
 
                     if(len < buffer.Length)
                     {
-                        logger.LogCritical("Data packed full " + currentPacket.Index);
                         this.blockStarted = false;
                         if(newPacketAction != null)
                             newPacketAction.Invoke(this.currentPacket);
 
                         sw.Stop();
                         Console.WriteLine("Elapsed = {0}", sw.Elapsed.Milliseconds);
-                        var num = (1000 / sw.Elapsed.Milliseconds);
-                        Console.WriteLine("In 1 sec: {0}", num);
+                        var num = (1000.0 / sw.Elapsed.Milliseconds);
+                        Console.WriteLine("In {0}/sec: ", num);
 
-                        // sw.Elapsed.TotalMilliseconds
+                        // Find line end after "Data End:" message
+                        var msg = Encoding.ASCII.GetString(buffer, len, (buffer.Length-len));
+                        var index = msg.IndexOf(Constants.DMC_DATA_ENDS_TAG);
+                        index = PatternAt(buffer, LINE_END, index) + 2;
 
-                        this.currentPacket = new DataPacket();
-                        this.currentPacket.Data = new byte[this.dataPacketSize];
-
-                        Array.Copy(buffer, len, currentPacket.Data, 0, buffer.Length - len);
-                        currentPacket.DataIndex += buffer.Length - len;
+                        var i = 0;
+                        while(index < buffer.Length)
+                        {
+                            buffer[i] = buffer[index];
+                            i += 1;
+                            index += 1;
+                        }
+                        FillBuffer(i);
+                        var test = Encoding.ASCII.GetString(buffer, 0, buffer.Length);
                     }
-
                 }
             }
         }
@@ -181,19 +179,10 @@ namespace fNIRS.Hardware.ISS
             return -1;
         }
 
-        public void SaveCycleData(CYCLEDATA6 Cycle)
-        {
-            
-        }
-
-        private unsafe T ByteArrayToStructure<T>(byte[] bytes, int start) where T : struct
-        {
-            fixed (byte* ptr = &bytes[start])
-            {
-                return (T)Marshal.PtrToStructure((IntPtr)ptr, typeof(T));
-            }
-        }
-
+        /** Extract useful informations from the server response 
+        *  eg.
+        *  100 Data Starts:	339928 bytes, block #1  time sent=1.33000E-001
+        */
         private DataPacket GetPacketData(string data)
         {
             string[] rows = data.Split("\n");
@@ -210,33 +199,48 @@ namespace fNIRS.Hardware.ISS
             var index = int.Parse(indexAndTime[1].Replace("#", ""));
             var time = indexAndTime[4].Replace("sent=", "");
 
-            // Console.WriteLine(row);
             return new DataPacket()
             {
                 Index = index,
                 Size = size,
                 Time = time,
             };
-            // 100 Data Starts:	339928 bytes, block #1  time sent=1.33000E-001
+            
         }
 
-        public string ReadTo(string key)
+        private string ReadTo(string key)
         {
             lock(this)
             {
-                var result = string.Empty;
+                var result = Encoding.ASCII.GetString(buffer, 0, buffer.Length);
                 while(true)
                 {
+                    if (result.IndexOf(key) > -1)
+                        return result;
+                
                     var chunk = GetChunkAsync();
                     chunk.Wait();
                     result += chunk.Result;
-                    var index = result.IndexOf(key);
-                    if (index > -1)
-                    {
-                        return result;
-                    }
                 }
             }
+        }
+
+        public int FillBuffer(int from = 0)
+        {
+            lock(this)
+            {
+                var read = from;
+                while (read + 1 < buffer.Length)
+                {
+                    read += stream.Read(buffer, read, (buffer.Length - read));
+                }
+                return read;
+            }
+        }
+
+        public async Task<int> FillBufferAsync(int from = 0)
+        {
+            return await stream.ReadAsync(buffer, from, (buffer.Length-from));
         }
 
         public async Task<string> GetChunkAsync()
@@ -244,7 +248,7 @@ namespace fNIRS.Hardware.ISS
             int bytes = 0;
             try
             {
-                bytes = await stream.ReadAsync(buffer, 0, buffer.Length);
+                bytes = await FillBufferAsync();
             }
             catch (ObjectDisposedException)
             {
@@ -278,6 +282,9 @@ namespace fNIRS.Hardware.ISS
                         result += read;
                     else
                         break;
+
+                    //if (read.IndexOf(Constants.DMC_Virtual_Secondary_DDS_System) > -1)
+                    //    return result;
                 }
 
                 return result;

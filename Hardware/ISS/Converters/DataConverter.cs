@@ -93,9 +93,7 @@ namespace fNIRS.Hardware.ISS.Converters
                         Imag = real.ToArray(),
                     });
                 }
-            }    
-
-            // Console.WriteLine(result.Count);
+            }
 
             return result.ToArray();
         }

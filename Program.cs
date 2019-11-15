@@ -33,24 +33,35 @@ namespace fNIRS
         public static void Test()
         {
             var adapter = GetIISAdapter();
-            adapter.Connect();
+            adapter.Connect().Wait();
 
-            using (StreamWriter file = new StreamWriter(@"C:\dev\fNIRS\app\data-log.json"))
+            adapter.RegisterStreamListener((packet) =>
             {
-                adapter.RegisterStreamListener((packet) =>
-                {
-                    file.WriteLine("\n");
+                Console.WriteLine(packet.Index);
+                Console.WriteLine("Missed cycles: " + packet.Header.Value.missed_cycles);
+                Console.WriteLine("Cycles: " + packet.Cycles.Count);
+                Console.WriteLine("DC data length: " + packet.Cycles[0].DCData.Length);
+                return;
+            });
+        
 
-                    var json = JsonConvert.SerializeObject(packet);
-                    file.WriteLine(json);
-                });
+        //using (StreamWriter file = new StreamWriter(@"C:\dev\fNIRS\app\data-log.json"))
+        //{
+        //    adapter.RegisterStreamListener((packet) =>
+        //    {
+        //        file.WriteLine("\n");
+
+        //        var json = JsonConvert.SerializeObject(packet);
+        //        file.WriteLine(json);
+        //    });
                 
-                adapter.StartStreaming().Wait();
+            adapter.StartStreaming().Wait();
 
-                Console.ReadLine();
-                adapter.StopStreaming().Wait();
-                Console.WriteLine("Streaming stopped");
-            }
+            Console.ReadLine();
+            adapter.Join();
+            adapter.StopStreaming().Wait();
+            Console.WriteLine("Streaming stopped");
+            //}
             adapter.Disconnect().Wait();
             Console.WriteLine("Disconnected");
         }
