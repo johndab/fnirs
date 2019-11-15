@@ -38,6 +38,10 @@ namespace fNIRS.Hardware.ISS.Converters
             else if(mode == 32)
             {
                 type = typeof(DCrealimage_2D);
+            } 
+            else 
+            {
+                return result.ToArray();
             }
 
             for(int i=0; i<n; i++)

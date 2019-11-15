@@ -29,7 +29,7 @@ namespace fNIRS
 
             services.AddSpaStaticFiles(configuration =>
             {
-                configuration.RootPath = "UI/dist";
+                configuration.RootPath = "./ui";
             });
 
             var demo = Configuration.GetValue("ISSAdapter:demo", false);

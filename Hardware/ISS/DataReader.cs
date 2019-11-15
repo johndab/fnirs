@@ -32,6 +32,7 @@ namespace fNIRS.Hardware.ISS
         public bool IsAlive { get; private set; }
         private ILogger logger { get; }
         private Stopwatch sw = new Stopwatch();
+        private Stopwatch sw2 = new Stopwatch();
 
         public DataReader(NetworkStream stream, ILogger logger)
         {
@@ -76,10 +77,13 @@ namespace fNIRS.Hardware.ISS
             int HEADER_SIZE = Marshal.SizeOf(typeof(HEADERDATA6));
             int CYCLE_SIZE = Marshal.SizeOf(typeof(CYCLEDATA6));
 
+            sw2.Start();
+
             FillBuffer();
             
             while (thread.IsAlive && stream.CanRead)
             {
+
                 if (!this.blockStarted)
                 {
                     // Read the response from the server 
@@ -103,13 +107,17 @@ namespace fNIRS.Hardware.ISS
                         currentPacket.DataIndex = len;
                         this.blockStarted = true;
                     } else {
-                        logger.LogCritical("Invalid block start");
+                        if(streaming)
+                            logger.LogCritical("Invalid block start");
                         return;
                     }
                 }
                 else
                 {
                     var bytes = FillBuffer();
+                    if(bytes == 0 && !streaming) {
+                        return;
+                    } 
                     var len = Math.Min(currentPacket.Size - currentPacket.DataIndex, buffer.Length);
                     if(len > 0) {
                         Array.Copy(buffer, 0, currentPacket.Data, currentPacket.DataIndex, len);
@@ -144,9 +152,18 @@ namespace fNIRS.Hardware.ISS
                             newPacketAction.Invoke(this.currentPacket);
 
                         sw.Stop();
-                        Console.WriteLine("Elapsed = {0}", sw.Elapsed.Milliseconds);
-                        var num = (1000.0 / sw.Elapsed.Milliseconds);
-                        Console.WriteLine("{0}/sec: ", num);
+                        if(currentPacket.Index != 0 && (currentPacket.Index % 101 == 0))
+                        {
+                            sw2.Stop();
+                            Console.WriteLine("Elapsed = {0}", sw2.Elapsed.Milliseconds);
+                            var num = (1000.0 / (sw2.Elapsed.Milliseconds / 100) );
+                            Console.WriteLine("{0}/sec ", num);
+                            sw2.Start();
+                        }
+
+                        // Console.WriteLine("Elapsed = {0}", sw.Elapsed.Milliseconds);
+                        // var num = (1000.0 / sw.Elapsed.Milliseconds);
+                        // Console.WriteLine("{0}/sec: ", num);
 
                         // Find line end after "Data End:" message
                         var msg = Encoding.ASCII.GetString(buffer, len, (buffer.Length-len));
@@ -230,7 +247,7 @@ namespace fNIRS.Hardware.ISS
             lock(this)
             {
                 var read = from;
-                while (read + 1 < buffer.Length)
+                while (read + 1 < buffer.Length && streaming)
                 {
                     read += stream.Read(buffer, read, (buffer.Length - read));
                 }

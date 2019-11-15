@@ -33,9 +33,10 @@ namespace fNIRS.Services
 
             Electron.IpcMain.Upon("stopDataStream", async (x) =>
             {
+               adapter.RemoveStreamListener();
+               
                await adapter.StopStreaming();
 
-               adapter.RemoveStreamListener();
                var conn = adapter.IsStreaming();
                Electron.IpcMain.SendMain("isStreaming", conn);
             });
