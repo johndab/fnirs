@@ -28,8 +28,9 @@
         :w="item.w"
         :h="item.h"
         :i="item.i"
-        class="grid-item d-flex flex-column justify-content-center"
+        class="grid-item d-flex flex-column"
         :class="{ 
+          'justify-content-center': editable,
           selected: selected[item.i], 
           [item.type]: true,
           edited: edited === item.i,
@@ -40,6 +41,12 @@
       >
         <div class="node">
           {{ item.address }}
+        </div>
+        <div 
+          :ref="`${item.type}${item.address}`"
+          class="value"
+        >
+          val
         </div>
       </GridItem>
     </GridLayout>
@@ -109,6 +116,38 @@ export default {
     document.removeEventListener('mouseup', this.mouseUp);
   },
   methods: {
+    setData(data) {
+      const max = data.values.reduce((acc, curr) => Math.max(curr.ac, acc), 0)
+      const min = data.values.reduce((acc, curr) => Math.min(curr.ac, acc),
+        data.values[0].ac)
+
+      this.layout.forEach(({ address, type }) => {
+        const xs = this.$refs[`${type}${address}`];
+        let avg = 0;
+        
+        if(xs.length > 0){
+          const el = xs[0];
+          if(type === 'detector') {
+            const sources = data.values.filter(x => x.detector == address);
+  
+            avg = sources
+              .reduce((acc, curr) => curr.ac + acc, 0) / sources.length;
+  
+          } else {
+            const detectors = data.values.filter(x => x.source == address);
+  
+            avg = detectors
+              .reduce((acc, curr) => curr.ac + acc, 0) / detectors.length;
+          }
+  
+          const ratio = (avg - min) / (max - min);
+          const color = Math.round(ratio * 100) / 100; 
+          el.parentElement.style.backgroundColor = `rgba(255, 0, 0, ${color})`
+          el.innerHTML = `${Math.floor(avg)}`;
+
+        }
+      });
+    },
     updateLayout(l) {
       const newLayout = l.map(n => ({
         address: n.address,
@@ -270,11 +309,12 @@ export default {
       background-color: rgba(207, 36, 36, 0.1);
       font-weight: 500;
     }
-    // .node {
-    //   width: 100%;
-    //   height: 100%;
-    //   transform: rotate(45deg);
-    // }
+    .node {
+      font-weight: bold;
+      // width: 100%;
+      // height: 100%;
+      // transform: rotate(45deg);
+    }
   }
 
   #dragArea {

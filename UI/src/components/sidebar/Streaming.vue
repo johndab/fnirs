@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="mt-1">
     Data Stream
     <div>
       <BFormCheckbox
@@ -32,22 +32,22 @@ export default {
     ...mapGetters(['isStreaming']),
   },
   created() {
-    this.$ipc.on('isStreaming', this.onIsStreaming);
-    this.$ipc.send("isStreaming"); 
+    this.$ipc.on('IsStreaming', this.onIsStreaming);
+    this.$ipc.send("IsStreaming"); 
   },
   destroyed() {
-    this.$ipc.removeListener('isStreaming', this.onIsStreaming);
+    this.$ipc.removeListener('IsStreaming', this.onIsStreaming);
   },
   methods: {
     update() {
       this.pending = true;
       if(!this.isStreaming) {
-        this.$ipc.send("startDataStream");
+        this.$ipc.send("StartDataStream");
       } else {
-        this.$ipc.send("stopDataStream");
+        this.$ipc.send("StopDataStream");
       }
     },
-    onIsStreaming(event, arg) {
+    onIsStreaming(arg) {
       this.localCheckbox = !this.localCheckbox;
       this.$nextTick(() => {
         this.localCheckbox = arg;

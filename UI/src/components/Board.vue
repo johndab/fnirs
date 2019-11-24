@@ -15,6 +15,7 @@
     </div>
 
     <Layout 
+      ref="layout"
       class="flex-grow-1"
       :layout="layout"
     />
@@ -33,17 +34,19 @@ export default {
     ...mapGetters(['layout']),
   },
   created() {
-    this.$ipc.on('newDataPacket', this.onNewData);
+    this.$ipc.on('NewDataPacket', this.onNewData);
   },
   destroyed() {
-    this.$ipc.removeListener('newDataPacket', this.onNewData);
+    this.$ipc.removeListener('NewDataPacket', this.onNewData);
   },
   methods: {
     edit() {
       this.$router.push('/edit');
     },
-    onNewData(ev, arg) {
-      console.debug(arg);
+    onNewData(arg) {
+      if(this.$refs.layout) {
+        this.$refs.layout.setData(arg);
+       }
     }
   },
 }

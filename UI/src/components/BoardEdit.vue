@@ -178,7 +178,7 @@ export default {
     },
     save() {
       this.$store.commit('setLayoutPending', true);
-      this.$ipc.send('saveConfig', JSON.stringify(this.layout));
+      this.$ipc.send('SaveLayout', JSON.stringify(this.layout));
     },
   },
 }

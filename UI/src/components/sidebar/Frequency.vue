@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="mt-1">
     Demodulation Freq.
     <span
       v-if="pending"
@@ -48,32 +48,31 @@ export default {
     }
   },
   destroyed() {
-    this.$ipc.removeListener("getFrequencies", this.getFrequencies);
-    this.$ipc.removeListener("getFrequency", this.getFrequency);
+    this.$ipc.removeListener("GetFrequencies", this.getFrequencies);
+    this.$ipc.removeListener("GetFrequency", this.getFrequency);
   },
   methods: {
     requestFrequencies() {
-      this.$ipc.send("getFrequencies");
-      this.$ipc.send("getFrequency");
+      this.$ipc.send("GetFrequencies");
+      this.$ipc.send("GetFrequency");
     },
     update() {
       this.pending = true;
-      this.$ipc.send('setFrequency', this.frequency);
+      this.$ipc.send('SetFrequency', this.frequency);
     },
     register() {
-      this.$ipc.on('getFrequencies', this.getFrequencies);
-      this.$ipc.on('getFrequency', this.getFrequency);
+      this.$ipc.on('GetFrequencies', this.getFrequencies);
+      this.$ipc.on('GetFrequency', this.getFrequency);
     },
-    getFrequencies(event, arg) {
-      console.debug(arg);
+    getFrequencies(arg) {
       this.frequencies = arg || [];
     },
-    getFrequency(event, arg) {
+    getFrequency(arg) {
       this.pending = false;
       this.frequency = arg;
     },
     setFrequency(f) {
-      this.$ipc.send('setFrequency', f);
+      this.$ipc.send('SetFrequency', f);
     }
   },
 }

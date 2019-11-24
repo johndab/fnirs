@@ -9,6 +9,7 @@
     "test:unit": "vue-cli-service test:unit"
   },
   "dependencies": {
+    "@microsoft/signalr": "^3.0.1",
     "bootstrap": "^4.3.1",
     "bootstrap-vue": "^2.0.4",
     "core-js": "^3.1.2",
@@ -18,7 +19,8 @@
     "vue-grid-layout": "^2.3.6",
     "vue-property-decorator": "^8.1.0",
     "vue-router": "^3.0.6",
-    "vuex": "^3.0.1"
+    "vuex": "^3.0.1",
+    "vuex-rest-api": "^2.11.0"
   },
   "devDependencies": {
     "@types/jest": "^24.0.11",

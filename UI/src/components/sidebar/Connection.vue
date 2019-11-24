@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="mt-1">
     Hardware Connection
     <div>
       <BFormCheckbox
@@ -32,11 +32,11 @@ export default {
     ...mapGetters(['isConnected']),
   },
   created() {
-    this.$ipc.on('isConnected', this.onIsConnected);
-    this.$ipc.send("isConnected");
+    this.$ipc.on('IsConnected', this.onIsConnected);
+    this.$ipc.send("IsConnected");
   },
   destroyed() {
-    this.$ipc.removeListener('isConnected', this.onIsConnected);
+    this.$ipc.removeListener('IsConnected', this.onIsConnected);
   },
   methods: {
     update() {
@@ -47,7 +47,7 @@ export default {
         this.$ipc.send("hardwareDisconnect");
       }
     },
-    onIsConnected(event, arg) {
+    onIsConnected(arg) {
       this.localCheckbox = !this.localCheckbox;
       this.$nextTick(() => {
         this.localCheckbox = arg;

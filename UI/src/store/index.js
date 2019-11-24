@@ -9,6 +9,8 @@ export default new Vuex.Store({
     streaming: false,
     layout: [],
     layoutPending: false,
+    cyclesNum: 8,
+    switchMode: 8,
   },
   mutations: {
     setConnected(s, v) {
@@ -16,6 +18,12 @@ export default new Vuex.Store({
     },
     setStreaming(s, v) {
       s.streaming = v;
+    },
+    setCyclesNum(s, v) {
+      s.cyclesNum = v;
+    },
+    setSwitch(s, v) {
+      s.switchMode = v;
     },
     setLayout(s, l) {
       s.layout = l;
@@ -26,6 +34,7 @@ export default new Vuex.Store({
     }
   },
   getters: {
+    cyclesNum: s => s.cyclesNum,
     isConnected: s => s.connected,
     isStreaming: s => s.streaming,
     layout: s => s.layout,

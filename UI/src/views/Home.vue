@@ -30,14 +30,14 @@ export default {
   }),
   created() {
     this.configPending = true;
-    this.$ipc.on('getConfig', this.configReceived);
-    this.$ipc.send('getConfig');
+    this.$ipc.on('GetLayout', this.configReceived);
+    this.$ipc.send('GetLayout');
   },
   destroyed() {
     this.$ipc.removeListener('getConfig', this.configReceived);
   },
   methods: {
-    configReceived(event, arg) {
+    configReceived(arg) {
       this.configPending = false;
       const layout = arg ? JSON.parse(arg) : [];
       this.$store.commit('setLayout', layout);

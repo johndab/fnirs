@@ -7,15 +7,17 @@ import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 
 import demoIpc from './demoIpc';
+import SocketIpc from './SocketIpc';
 
 // tslint:disable-next-line
-const { ipcRenderer } = require("electron");
+// const { ipcRenderer } = require("electron");
 
 Vue.use(BootstrapVue)
 Vue.config.productionTip = false;
 
-Vue.prototype.$ipc = ipcRenderer;
+// Vue.prototype.$ipc = ipcRenderer;
 // Vue.prototype.$ipc = demoIpc;
+Vue.prototype.$ipc = new SocketIpc();
 
 new Vue({
   router,

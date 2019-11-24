@@ -1,8 +1,57 @@
 <template>
   <div id="app">
-    <RouterView />
+    <RouterView v-if="!pending" />
+    <BSpinner
+      v-else
+      style="margin-top: 50px"
+    />
   </div>
 </template>
+
+<script>
+// import Vue from 'vue';
+import * as signalR from "@microsoft/signalr";
+
+export default {
+  data: () => ({
+    pending: true,
+  }),
+  created() {
+    this.connect()
+  },
+  methods: {
+    connect() {
+      const conn = new signalR.HubConnectionBuilder()
+          .withUrl("http://localhost:5000/fnirs")
+          .configureLogging(signalR.LogLevel.Information)
+          .build();
+
+      conn.start()
+        .then(()  => {
+          conn.onclose(() => {
+            this.$ipc.clearConnection();
+            this.reconnect();
+          });
+          this.$ipc.updateConnection(conn);
+          this.pending = false;
+        })
+        .catch((err) => {
+          this.reconnect();
+        });
+    },
+    reconnect() {
+      this.pending = true;
+      if(this.timeout) {
+        clearTimeout(this.timeout);
+      }
+
+      this.timeout = setTimeout(() => {
+        this.connect();
+      }, 2000);
+    },
+  },
+}
+</script>
 
 <style lang="scss">
 #app {
