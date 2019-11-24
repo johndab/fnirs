@@ -83,6 +83,15 @@ namespace fNIRS.Hardware.ISS
             {
                 try
                 {
+                    StopStreaming();
+                }
+                catch 
+                { }
+
+                this.reader = null;
+
+                try
+                {
                     Send(Constants.DMC_QUIT);
                 } 
                 finally

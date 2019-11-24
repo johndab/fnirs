@@ -9,7 +9,7 @@ namespace fNIRS.Hubs
         {
             adapter.RegisterStreamListener((y) =>
             {
-                var viewModel = y.ToModel();
+                var viewModel = y.ToModel(store.graph);
                 store.hubContext.Clients.All.SendAsync("NewDataPacket", viewModel);
             });
 

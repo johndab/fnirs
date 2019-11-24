@@ -32,9 +32,8 @@ namespace fNIRS
                     .AllowCredentials();
             }));
 
-            services.AddSignalR();
-
-            //services.AddControllers();
+            services.AddSignalR()
+                .AddNewtonsoftJsonProtocol();
 
             //services.AddSpaStaticFiles(configuration =>
             //{

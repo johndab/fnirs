@@ -40,14 +40,13 @@
         @dblclick.native="edit(item)"
       >
         <div class="node">
+          {{ item.type.slice(0,1).toUpperCase() }}
           {{ item.address }}
         </div>
         <div 
           :ref="`${item.type}${item.address}`"
           class="value"
-        >
-          val
-        </div>
+        />
       </GridItem>
     </GridLayout>
 
@@ -55,16 +54,31 @@
       id="dragArea"
       ref="dragArea"
     />
+    <Connections 
+      v-if="box.width"
+      ref="connections"
+      :graph="graph"
+      :container="box"
+      :col-num="colNum"
+      :row-height="rowHeight"
+      :layout="layout"
+      :size="size"
+      :use-connections="useConnections"
+      :values="values"
+    />
   </div>
 </template>
 
 <script>
 import VueGridLayout from 'vue-grid-layout';
+import tinycolor from 'tinycolor2';
+import Connections from './graph/Connections';
 
 export default {
   components: {
     GridLayout: VueGridLayout.GridLayout,
-    GridItem: VueGridLayout.GridItem
+    GridItem: VueGridLayout.GridItem,
+    Connections,
   },
   props: {
     layout: {
@@ -80,6 +94,11 @@ export default {
       type: [Number, String],
       default: -1,
     },
+    depth: {
+      type: Number,
+      default: 1,
+    },
+    useConnections: Boolean,
   },
   data: () => ({
     internalLayout: [],
@@ -88,12 +107,30 @@ export default {
     size: 2,
     box: {},
     drag: {},
+    graph: [],
     selected: {},
   }),
   watch: {
     layout() {
       this.refreshLayout();
-    }
+    },
+    depth(v) {
+      this.graph = this.genGraph(this.layout);
+      this.$emit('setGraph', this.graph);
+    },
+    useConnections(v) {
+      if(v) {
+        this.layout.forEach(({ address, type }) => {
+          const boxes = this.$refs[`${type}${address}`];
+          if(boxes.length === 0) return;
+          const el = boxes[0];
+
+          el.parentElement.style.backgroundColor = 'transparent';
+          el.parentElement.style.borderColor = 'rgba(100, 100, 100, 0.2)';
+          el.innerHTML = '';
+        })
+      }
+    },
   },
   mounted() {
     const handleResize = () => {
@@ -106,6 +143,9 @@ export default {
   },
   created() {
     this.refreshLayout();
+    this.graph = this.genGraph(this.layout);
+    this.$emit('setGraph', this.graph);
+
     if (this.editable) {
       document.addEventListener('mousemove', this.mouseMove);
       document.addEventListener('mouseup', this.mouseUp);
@@ -117,34 +157,95 @@ export default {
   },
   methods: {
     setData(data) {
-      const max = data.values.reduce((acc, curr) => Math.max(curr.ac, acc), 0)
-      const min = data.values.reduce((acc, curr) => Math.min(curr.ac, acc),
-        data.values[0].ac)
+      if(this.useConnections) {
+        this.$refs.connections.setData(data);
+      }
 
-      this.layout.forEach(({ address, type }) => {
-        const xs = this.$refs[`${type}${address}`];
-        let avg = 0;
-        
-        if(xs.length > 0){
-          const el = xs[0];
-          if(type === 'detector') {
-            const sources = data.values.filter(x => x.detector == address);
-  
-            avg = sources
-              .reduce((acc, curr) => curr.ac + acc, 0) / sources.length;
-  
-          } else {
-            const detectors = data.values.filter(x => x.source == address);
-  
-            avg = detectors
-              .reduce((acc, curr) => curr.ac + acc, 0) / detectors.length;
+      const max = data.acMax;
+      const min = data.acMin;
+
+      const updateElement = (el, val) => {
+        let ratio = (val - min) / (max - min);
+          if(Number.isNaN(ratio)) {
+            ratio = 0;
+            val = '?';
           }
-  
-          const ratio = (avg - min) / (max - min);
-          const color = Math.round(ratio * 100) / 100; 
-          el.parentElement.style.backgroundColor = `rgba(255, 0, 0, ${color})`
-          el.innerHTML = `${Math.floor(avg)}`;
+          if(this.useConnections) {
+            el.innerHTML = `${Math.floor(val)}`;
+            return;
+          }
+          const colorRatio = Math.round(ratio * 100); 
 
+          let color = tinycolor({ 
+            h: 100 - colorRatio * 0.8, 
+            s: 100, 
+            l: 50,
+            a: colorRatio / 100
+          })
+          .toRgbString();
+
+          el.parentElement.style.backgroundColor = color;
+          el.parentElement.style.borderColor = color;
+          el.innerHTML = `${Math.floor(val)}`;
+      }
+
+      Object.keys(data.values).forEach(d => {
+          const dbox = this.$refs[`detector${d}`];
+          if(dbox.length === 0 || data.values[d].length === 0) return;
+          const el = dbox[0];
+          const sourceValues = Object.values(data.values[d]);
+          const avg = sourceValues.reduce((acc, source) => source.ac + acc, 0) 
+            / sourceValues.length;
+          
+          updateElement(el, avg);
+      });
+
+      const list = Object.values(data.values);
+      this.layout.forEach(({ address, type }) => {
+        if(type === 'detector') return;
+        const sbox = this.$refs[`source${address}`];
+        if(sbox.length === 0) return;
+        const el = sbox[0];
+
+        const values = list
+          .filter(det => det[address])
+          .map(det => det[address]);
+        
+        const avg = values
+          .reduce((acc, curr) => acc + curr.ac, 0) / values.length;
+
+        updateElement(el, avg);
+      });
+    },
+    genGraph(layout) {
+      const { depth } = this;
+      const distance = (a, b) => Math.pow((a.x - b.x), 2) + Math.pow((a.y - b.y), 2); 
+      return layout
+        .filter(x => x.type === 'detector')
+        .map(x => {
+        const distances = layout
+          .reduce((acc, y) => { 
+            if(y.i == x.i || x.type === y.type) return acc;
+            const d = Math.floor(distance(x, y));
+            if(acc[d]) {
+              acc[d].push(y);
+            } else {
+              acc[d] = [y];
+            }
+            return acc;
+          }, {});
+
+        const targets = Object.keys(distances)
+          .sort((a, b) => a - b);
+        const target = targets[depth-1] || [];
+        const nearest = distances[target];
+        
+        return {
+          address: x.address,
+          type: x.type,
+          x: x.x,
+          y: x.y,
+          nearest,
         }
       });
     },
@@ -156,6 +257,8 @@ export default {
         x: n.x,
         y: n.y,
       }))
+      this.graph = this.genGraph(newLayout);
+      this.$emit('setGraph', this.graph);
       this.$emit('update:layout', newLayout);
     },
     edit(item) {
@@ -291,7 +394,7 @@ export default {
 <style lang="scss" scoped>
   .grid-item {
     font-size: 10px;
-    border: 1px solid rgba(100, 100, 100, 0.5);
+    border: 1px solid rgba(100, 100, 100, 0.2);
 
     user-select: none;
 
@@ -311,9 +414,6 @@ export default {
     }
     .node {
       font-weight: bold;
-      // width: 100%;
-      // height: 100%;
-      // transform: rotate(45deg);
     }
   }
 

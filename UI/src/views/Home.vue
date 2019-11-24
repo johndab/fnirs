@@ -51,5 +51,6 @@ export default {
 
   .full-height {
     height: 100vh;
+    overflow: hidden;
   }
 </style>

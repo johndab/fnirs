@@ -3,56 +3,60 @@ using System.Collections.Generic;
 using fNIRS.Hardware.Models;
 using System.Linq;
 using System.Runtime.InteropServices;
+using fNIRS.Memory;
 
 namespace fNIRS.Hardware
 {
     public static class ModelConverter
     {
-        public unsafe static ViewModel ToModel(this DataPacket packet)
+        public unsafe static GraphValues ToModel(this DataPacket packet, GraphModel graph)
         {
-            return new ViewModel()
+            GraphValues valueGraph = new GraphValues(packet.Index);
+
+            foreach (var key in graph.Keys)
             {
-                Index = packet.Index,
-                Values = GetSourceDetector(packet.Cycles)
-            };
+                valueGraph.AddDetector(key);
+            }
+
+            ProcessCycle(packet.Cycles.First(), graph, valueGraph);
+
+            return valueGraph;
         }
 
-        public static ICollection<SourceDetector> GetSourceDetector(
-            ICollection<CycleData> data)
+        public static void ProcessCycle(CycleData cycle, GraphModel graph, GraphValues values)
         {
-            // TODO: Consider all cycles
-            return GetCycle(data.First());
-        }
-
-        public static ICollection<SourceDetector> GetCycle(CycleData cycle)
-        {
-            var result = new List<SourceDetector>();
-
-            for(int detector = 1; detector <= 32; detector++)
+            foreach(var detector in graph.Keys)
             {
                 var detectorData = cycle.Values
                     .Where(x => x.Detector == detector)
                     .ToArray();
 
-                for(int source = 1; source <= 32; source++)
-                {
-                    var row = source % cycle.Mode;
-                    var measurement = detectorData[row];
-                    
-                    var i = source / cycle.Mode;
-                    var imag = measurement.Imag[i];
-                    var real = measurement.Real[i];
+                graph.TryGetValue(detector, out var sources);
 
-                    result.Add(new SourceDetector()
+                foreach(var source in sources)
+                {
+                    try
                     {
-                        Detector = detector,
-                        Source = source,
-                        AC = Math.Sqrt(Math.Pow(imag, 2) +  Math.Pow(real, 2)),
-                    });
+                        var row = (source - 1) % cycle.Mode;
+                        var measurement = detectorData[row];
+                    
+                        var i = source / cycle.Mode;
+                        var imag = measurement.Imag[i];
+                        var real = measurement.Real[i];
+
+                        var ac = Math.Sqrt(Math.Pow(imag, 2) + Math.Pow(real, 2));
+                        var phase = Math.Atan2(imag, real);
+
+                        values.SetSourceValue(detector, source, new NodeValue()
+                        {
+                            AC = ac,
+                            Phase = phase
+                        });
+                    }
+                    catch
+                    { }
                 }
             }
-
-            return result;
         }
 
 

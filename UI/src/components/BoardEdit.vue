@@ -1,26 +1,32 @@
 <template>
   <div class="board d-flex flex-column">
     <div class="d-flex justify-content-between">
-      <div>
-        <button 
-          class="btn btn-secondary btn-sm mx-1"
-          style="width: 120px"
-          @click="cancel"
-        >
-          Close
-        </button>
-        <button 
-          class="btn btn-success btn-sm mx-1"
-          style="width: 120px"
-          :disabled="layoutPending"
-          @click="save"
-        >
-          Save
-        </button>
+      <div class="d-flex">
+        <div style="width: 220px">
+          <button 
+            class="btn btn-secondary btn-sm"
+            style="width: 100px; margin: 0 5px"
+            @click="cancel"
+          >
+            Close
+          </button>
+          <button 
+            class="btn btn-success btn-sm"
+            style="width: 100px; margin: 0 5px"
+            :disabled="layoutPending"
+            @click="save"
+          >
+            Save
+          </button>
 
-        <BSpinner
-          v-if="layoutPending"
-          small
+          <BSpinner
+            v-if="layoutPending"
+            small
+          />
+        </div>
+        <NeighbourSelect 
+          style="width: 100px; margin-left: 5px;"
+          :value.sync="depth"
         />
       </div>
 
@@ -104,17 +110,21 @@
       :layout.sync="layout"
       :editable="true"
       :edited="edited ? edited.i : null"
+      :depth="depth"
       @edit="edit"
+      @setGraph="setGraph"
     />
   </div>
 </template>
 
 <script>
 import Layout from './Layout';
+import NeighbourSelect from './graph/NeighbourSelect'
 import { mapGetters } from 'vuex';
 
 export default {
   components: {
+    NeighbourSelect,
     Layout,
   },
   data: () => ({
@@ -123,8 +133,11 @@ export default {
     type: 'source',
     pending: false,
     edited: null,
+    depth: 1,
   }),
-  computed: mapGetters(['layoutPending']),
+  computed: {
+    ...mapGetters(['layoutPending']),
+  },
   watch: {
     layoutPending(v) {
       if(!v) {
@@ -138,6 +151,9 @@ export default {
   methods: {
     cancel() {
       this.$router.push('/');
+    },
+    setGraph(graph) {
+      this.$ipc.send('SetGraph', graph);
     },
     edit(item) {
       this.edited = item;

@@ -27,6 +27,7 @@ namespace Backend.Tests
                 adapter.Connect();
 
                 var num = adapter.SetCycleNum(4);
+                Assert.AreEqual(4, num);
 
                 adapter.Disconnect();
             }

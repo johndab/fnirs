@@ -17,6 +17,7 @@
     <PackageReference Include="ElectronNET.API" Version="5.30.1" />
     <PackageReference Include="Scrutor" Version="3.1.0" />
     <PackageReference Include="VueCliMiddleware" Version="3.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="3.0.0" />
   </ItemGroup>
 
   <ItemGroup>

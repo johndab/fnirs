@@ -21,6 +21,8 @@ namespace fNIRS.Memory
 
         public ILogger<MainHub> logger { get; set; }
         public IHubContext<MainHub> hubContext;
+
+        public GraphModel graph;
         public string layoutPath { get; set; } 
         public string layout { get; set; }
         public ISSConnection dmcApp { get; set; }

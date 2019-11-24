@@ -19,6 +19,5 @@ namespace fNIRS.Hardware.Models
         public HeaderData Header { get; set; }
         [JsonIgnore]
         public List<CycleData> Cycles { get; set; }
-        // public ICollection<SourceDetector> Values { get; set; }
     }
 }

@@ -2,6 +2,8 @@
 using System.IO;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.SignalR;
+using fNIRS.Memory;
+using System.Collections.Generic;
 
 namespace fNIRS.Hubs
 {
@@ -35,6 +37,18 @@ namespace fNIRS.Hubs
             }
 
             Clients.Caller.SendAsync("GetLayout", store.layout);
+        }
+
+        public void SetGraph(GraphModel graph)
+        {
+            store.graph = graph;
+
+            //using (StreamWriter file = File.CreateText(store.layoutPath))
+            //{
+            //    file.Write(x);
+            //}
+
+            //Clients.Caller.SendAsync("SetGraph", graph);
         }
     }
 }
