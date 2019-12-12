@@ -11,6 +11,7 @@
 <script>
 // import Vue from 'vue';
 import * as signalR from "@microsoft/signalr";
+const url = process.env.VUE_APP_BASEURL
 
 export default {
   data: () => ({
@@ -22,7 +23,7 @@ export default {
   methods: {
     connect() {
       const conn = new signalR.HubConnectionBuilder()
-          .withUrl("http://localhost:5000/fnirs")
+          .withUrl(`${url}fnirs`)
           .configureLogging(signalR.LogLevel.Information)
           .build();
 

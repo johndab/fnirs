@@ -26,19 +26,18 @@ namespace fNIRS
                 options.AddPolicy("CorsPolicy", builder =>
             {
                 builder
-                    .WithOrigins("http://localhost:8080")
+                    .AllowAnyOrigin()
                     .AllowAnyMethod()
-                    .AllowAnyHeader()
-                    .AllowCredentials();
+                    .AllowAnyHeader();
             }));
 
             services.AddSignalR()
                 .AddNewtonsoftJsonProtocol();
 
-            //services.AddSpaStaticFiles(configuration =>
-            //{
-            //    configuration.RootPath = "./ui";
-            //});
+            services.AddSpaStaticFiles(configuration =>
+            {
+               configuration.RootPath = "./ui";
+            });
 
             services.AddSingleton<HubStore>();
             var demo = Configuration.GetValue("ISSAdapter:demo", false);
@@ -47,52 +46,32 @@ namespace fNIRS
             else
                 services.AddSingleton<IAdapter, ISSAdapter>();
 
-            //services.AddTransient
-
-            //services.Scan(scan => scan
-            //    .FromAssemblyOf<IService>()
-            //        .AddClasses(classes => classes.AssignableTo<IService>())
-            //        .AsImplementedInterfaces()
-            //        .WithTransientLifetime()
-            //);
         }
 
         public void Configure(IApplicationBuilder app)
         {
-            //app.UseSpaStaticFiles();
 
             app.UseCors("CorsPolicy");
             app.UseRouting();
 
-            //app.UseStaticFiles();
+            app.UseStaticFiles();
+            app.UseSpaStaticFiles();
 
-            //app.UseSpa(spa =>
-            //{
+            app.UseSpa(spa =>
+            {
             //    spa.Options.SourcePath = "UI";
             //    spa.UseProxyToSpaDevelopmentServer("http://localhost:8080");
-            //});
-
-            //app.UseSignalR(routes =>
-            //{
-            //    routes.MapHub<MainHub>("/MainHub");
-            //});
+            });
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapHub<MainHub>("/fnirs");
             });
 
-            //var services = app.ApplicationServices.GetServices<IService>();
-            //foreach(var service in services)
-            //{
-            //    Console.WriteLine(service.GetType().FullName);
-            //    service.Register();
-            //}
-
-            //if (HybridSupport.IsElectronActive)
-            //{
-            //    ElectronBootstrap();
-            //}
+            if (HybridSupport.IsElectronActive)
+            {
+                ElectronBootstrap();
+            }
         }
 
         public async void ElectronBootstrap()

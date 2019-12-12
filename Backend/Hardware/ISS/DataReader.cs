@@ -255,22 +255,6 @@ namespace fNIRS.Hardware.ISS
             
         }
 
-        //private string ReadTo(string key)
-        //{
-        //    lock(this)
-        //    {
-        //        var result = Encoding.ASCII.GetString(buffer, 0, buffer.Length);
-        //        while(true)
-        //        {
-        //            if (result.IndexOf(key) > -1)
-        //                return result;
-                
-        //            var chunk = GetChunk();
-        //            result += chunk;
-        //        }
-        //    }
-        //}
-
         public int FillBuffer(int from = 0)
         {
             lock(this)

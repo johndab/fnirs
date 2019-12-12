@@ -16,6 +16,9 @@
   <ItemGroup>
     <PackageReference Include="ElectronNET.API" Version="5.30.1" />
     <PackageReference Include="Scrutor" Version="3.1.0" />
+    <PackageReference Include="Serilog" Version="2.9.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="3.2.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" />
     <PackageReference Include="VueCliMiddleware" Version="3.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="3.0.0" />
   </ItemGroup>
@@ -28,7 +31,7 @@
 
   <PropertyGroup>
     <!-- Typescript/Javascript Client Configuration -->
-    <SpaRoot>UI\</SpaRoot>
+    <SpaRoot>..\UI\</SpaRoot>
     <DefaultItemExcludes>$(DefaultItemExcludes);$(SpaRoot)node_modules\**</DefaultItemExcludes>
   </PropertyGroup>
   
@@ -47,7 +50,7 @@
     </Exec>
   </Target>
 
-  <!-- <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">
+  <Target Name="PublishRunWebpack" AfterTargets="ComputeFilesToPublish">
     <Message Importance="high" Text="Running npm build..." />
     <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" />
 
@@ -58,6 +61,6 @@
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       </ResolvedFileToPublish>
     </ItemGroup>
-  </Target> -->
+  </Target>
 
 </Project>

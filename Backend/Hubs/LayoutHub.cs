@@ -16,7 +16,7 @@ namespace fNIRS.Hubs
             {
                 try
                 {
-                    store.layout = File.ReadAllText(store.layoutPath);
+                    store.layout = File.ReadAllText(store.layoutPath + "layout.json");
                 }
                 catch (Exception e)
                 {
@@ -31,7 +31,7 @@ namespace fNIRS.Hubs
         {
             store.layout = x;
 
-            using (StreamWriter file = File.CreateText(store.layoutPath))
+            using (StreamWriter file = File.CreateText(store.layoutPath + "layout.json"))
             {
                 file.Write(x);
             }
@@ -42,13 +42,6 @@ namespace fNIRS.Hubs
         public void SetGraph(GraphModel graph)
         {
             store.graph = graph;
-
-            //using (StreamWriter file = File.CreateText(store.layoutPath))
-            //{
-            //    file.Write(x);
-            //}
-
-            //Clients.Caller.SendAsync("SetGraph", graph);
         }
     }
 }
