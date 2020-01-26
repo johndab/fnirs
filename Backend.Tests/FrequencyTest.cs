@@ -18,7 +18,7 @@ namespace Backend.Tests
         public void TestFrequencyGetSet()
         {
 
-            using (var connection = new ISSConnection())
+            using (var connection = new ISSConnection(Helper.GetDMCExeFile()))
             {
                 var adapter = new ISSAdapter(
                     Helper.GetIConfigurationRoot(),

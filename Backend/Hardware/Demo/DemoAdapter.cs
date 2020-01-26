@@ -58,14 +58,6 @@ namespace fNIRS.Hardware.ISS
         {
             return this.streaming;
         }
-        public void RegisterStreamListener(Action<DataPacket> action)
-        {
-            this.reader.RegisterStreamListener(action);
-        }
-        public void RemoveStreamListener()
-        {
-            this.reader.RemoveStreamListener();
-        }
 #endregion
 #region FREQUENCIES
 

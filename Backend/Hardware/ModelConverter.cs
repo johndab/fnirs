@@ -9,7 +9,7 @@ namespace fNIRS.Hardware
 {
     public static class ModelConverter
     {
-        public unsafe static GraphValues ToModel(this DataPacket packet, GraphModel graph)
+        public unsafe static GraphValues ToModel(this DataPacket packet, GraphModel graph, int freq)
         {
             GraphValues valueGraph = new GraphValues(packet.Index);
 
@@ -18,12 +18,12 @@ namespace fNIRS.Hardware
                 valueGraph.AddDetector(key);
             }
 
-            ProcessCycle(packet.Cycles.First(), graph, valueGraph);
+            ProcessCycle(packet.Cycles.First(), graph, valueGraph, freq);
 
             return valueGraph;
         }
 
-        public static void ProcessCycle(CycleData cycle, GraphModel graph, GraphValues values)
+        public static void ProcessCycle(CycleData cycle, GraphModel graph, GraphValues values, int freq)
         {
             foreach(var detector in graph.Keys)
             {
@@ -40,7 +40,8 @@ namespace fNIRS.Hardware
                         var row = (source - 1) % cycle.Mode;
                         var measurement = detectorData[row];
                     
-                        var i = source / cycle.Mode;
+                        var i = ((source * 2) / cycle.Mode) + (freq % 2);
+                        if (i >= measurement.Imag.Length) continue;
                         var imag = measurement.Imag[i];
                         var real = measurement.Real[i];
 

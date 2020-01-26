@@ -5,6 +5,7 @@
       <BFormInput 
         v-model="cycles"
         size="sm"
+        :disabled="!isConnected"
         class="mr-1"
       />
       <button 
@@ -33,7 +34,7 @@ export default {
     pending: false,
   }),
   computed:{ 
-    ...mapGetters(['cyclesNum']),
+    ...mapGetters(['cyclesNum', 'isConnected']),
   },
   created() {
     this.cycles = this.cyclesNum;

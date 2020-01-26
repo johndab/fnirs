@@ -18,6 +18,12 @@ namespace Backend.Tests
                 .Build();
         }
 
+        public static string GetDMCExeFile() 
+        {
+            var config = GetIConfigurationRoot();
+            return config.GetValue("DMCExe", "");
+        }
+
         public static ILogger<T> GetILogger<T>()
         {
             var loggerFactory = LoggerFactory.Create(builder =>

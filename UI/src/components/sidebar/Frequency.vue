@@ -10,6 +10,7 @@
 
     <BFormSelect 
       v-model="frequency"
+      :disabled="!isConnected"
       :options="options"
       @change="update"
     />

@@ -10,6 +10,7 @@ using fNIRS.Hardware.Models;
 using System.Runtime.InteropServices;
 using fNIRS.Hardware.ISS.Converters;
 using System.Diagnostics;
+using fNIRS.Memory;
 
 namespace fNIRS.Hardware.ISS
 {
@@ -27,18 +28,19 @@ namespace fNIRS.Hardware.ISS
         private int readIndex = 0;
 
         private DataPacket currentPacket;
+        private MessageParser messageParser;
 
         private bool streaming = false;
         private bool blockStarted = false;
-        private Action<DataPacket> newPacketAction;
 
         private ILogger logger { get; }
         private Stopwatch sw = new Stopwatch();
 
-        public DataReader(NetworkStream stream, ILogger logger)
+        public DataReader(NetworkStream stream, MessageParser messageParser, ILogger logger)
         {
             this.stream = stream;
             this.logger = logger;
+            this.messageParser = messageParser;
         }
 
         public void StartStreaming()
@@ -59,16 +61,6 @@ namespace fNIRS.Hardware.ISS
         
         public bool IsStreaming() {
             return this.streaming;
-        }
-
-        public void RegisterStreamListener(Action<DataPacket> action)
-        {
-            this.newPacketAction = action;
-        }
-
-        public void RemoveStreamListener()
-        {
-            this.newPacketAction = null;
         }
         
         private void SkipInvalidBlock()
@@ -98,21 +90,23 @@ namespace fNIRS.Hardware.ISS
 
         protected unsafe void Run()
         {
+            logger.LogDebug("Starting data reader");
             int HEADER_SIZE = Marshal.SizeOf(typeof(HEADERDATA6));
             int CYCLE_SIZE = Marshal.SizeOf(typeof(CYCLEDATA6));
             TimeStart();
+            int i = 0;
 
             byte[] dataStarts = Encoding.ASCII.GetBytes(Constants.DMC_DATA_STARTS_TAG);
 
             try
             {
-
                 FillBuffer();
 
                 while (stream.CanRead && streaming)
                 {
                     if (!this.blockStarted)
                     {
+                        i += 1;
                         var index = PatternAt(buffer, dataStarts);
                         if (index == -1)
                         {
@@ -142,6 +136,7 @@ namespace fNIRS.Hardware.ISS
                         Array.Copy(buffer, index, packetBuffer, 0, len);
                         dataIndex = len;
                         this.blockStarted = true;
+                        logger.LogDebug($"Block {i} started");
                     }
                     else
                     {
@@ -180,8 +175,7 @@ namespace fNIRS.Hardware.ISS
                         if (len < buffer.Length)
                         {
                             this.blockStarted = false;
-                            if (newPacketAction != null)
-                                newPacketAction.Invoke(this.currentPacket);
+                            messageParser.Parse(this.currentPacket);
 
                             TimeTick(currentPacket.Index);
 
@@ -197,6 +191,7 @@ namespace fNIRS.Hardware.ISS
                             Array.Copy(temp, 0, buffer, 0, temp.Length);
 
                             FillBuffer((buffer.Length - index));
+                            logger.LogDebug($"Block {i} finshed");
                         }
                     }
                 }
@@ -232,27 +227,36 @@ namespace fNIRS.Hardware.ISS
         private DataPacket GetPacketData(int start)
         {
             string data = Encoding.ASCII.GetString(buffer, start, 100);
-            string[] rows = data.Split("\n");
-            if (rows.Length == 0) return null;
-            var row = rows.Where(r => r.IndexOf(Constants.DMC_DATA_STARTS_TAG) != -1).First();
-            var list = row.Split(new string[] { "\n", "," }, StringSplitOptions.RemoveEmptyEntries);
-
-            var size = int.Parse(list[0]
-                .Replace(Constants.DMC_DATA_STARTS_TAG + "\t", "")
-                .Replace("bytes", "")
-                .Trim());
-
-            var indexAndTime = list[1].Trim().Split(" ");
-            var index = int.Parse(indexAndTime[1].Replace("#", ""));
-            var time = indexAndTime[4].Replace("sent=", "");
-
-            return new DataPacket()
-            {
-                Index = index,
-                Size = size,
-                Time = time,
-            };
             
+            try 
+            {
+                string[] rows = data.Split("\n");
+                if (rows.Length == 0) return null;
+                var row = rows.Where(r => r.IndexOf(Constants.DMC_DATA_STARTS_TAG) != -1).First();
+                var list = row.Split(new string[] { "\n", "," }, StringSplitOptions.RemoveEmptyEntries);
+
+                var size = int.Parse(list[0]
+                    .Replace(Constants.DMC_DATA_STARTS_TAG + "\t", "")
+                    .Replace("bytes", "")
+                    .Trim());
+
+                var indexAndTime = list[1].Trim().Split(" ");
+                var index = int.Parse(indexAndTime[1].Replace("#", ""));
+                var time = indexAndTime[4].Replace("sent=", "");
+
+                return new DataPacket()
+                {
+                    Index = index,
+                    Size = size,
+                    Time = time,
+                };
+            }
+            catch(Exception)
+            {
+                logger.LogCritical("Invalid \"Data starts:\" header: " + data);
+            }
+            
+            return new DataPacket();
         }
 
         public int FillBuffer(int from = 0)

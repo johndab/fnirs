@@ -10,7 +10,6 @@ namespace fNIRS.Hardware.Demo
     public class DemoReader
     {
         private Thread thread;
-        private Action<DataPacket> action;
         private bool isRunning = false;
 
         private int index = 0;
@@ -42,8 +41,8 @@ namespace fNIRS.Hardware.Demo
                         // Detectors = FillDetectors(),
                     };
 
-                    if(action != null)
-                        action.Invoke(dataPacket);
+                    //if(action != null)
+                    //    action.Invoke(dataPacket);
 
                     Thread.Sleep(500);
                 }
@@ -70,15 +69,6 @@ namespace fNIRS.Hardware.Demo
 
         //     return list;
         // }
-
-        public void RegisterStreamListener(Action<DataPacket> action)
-        {
-            this.action = action;
-        }
-        public void RemoveStreamListener()
-        {
-            this.action = null;
-        }
  
     }
 }

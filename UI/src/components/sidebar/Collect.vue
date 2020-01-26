@@ -1,16 +1,16 @@
 <template>
   <div class="mt-1">
-    Data Stream
+    Collect
     <div>
       <BFormCheckbox
         ref="checkbox"
         :checked="localCheckbox"
         switch
         size="lg"
-        :disabled="pending || !isConnected"
+        :disabled="pending || !isStreaming"
         @change="update"
       >
-        {{ isStreaming ? 'Started' : 'Stopped' }}
+        {{ isCollecting ? 'Collecting' : 'Stopped' }}
         <BSpinner
           v-if="pending"
           small
@@ -29,31 +29,31 @@ export default {
     localCheckbox: false,
   }),
   computed: {
-    ...mapGetters(['isStreaming', 'isConnected']),
+    ...mapGetters(['isStreaming', 'isCollecting']),
   },
   created() {
-    this.$ipc.on('IsStreaming', this.onIsStreaming);
-    this.$ipc.send("IsStreaming"); 
+    this.$ipc.on('IsCollecting', this.onIsCollecting);
+    this.$ipc.send("IsCollecting"); 
   },
   destroyed() {
-    this.$ipc.removeListener('IsStreaming', this.onIsStreaming);
+    this.$ipc.removeListener('IsCollecting', this.onIsCollecting);
   },
   methods: {
     update() {
       this.pending = true;
-      if(!this.isStreaming) {
-        this.$ipc.send("StartDataStream");
+      if(!this.isCollecting) {
+        this.$ipc.send("CollectStart");
       } else {
-        this.$ipc.send("StopDataStream");
+        this.$ipc.send("CollectStop");
       }
     },
-    onIsStreaming(arg) {
+    onIsCollecting(arg) {
       this.localCheckbox = !this.localCheckbox;
       this.$nextTick(() => {
         this.localCheckbox = arg;
       });
 
-      this.$store.commit('setStreaming', arg);
+      this.$store.commit('setCollecting', arg);
       this.pending = false;
     }
   },

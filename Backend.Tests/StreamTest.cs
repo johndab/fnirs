@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using fNIRS.Hardware.ISS;
 using NUnit.Framework;
 using System;
@@ -8,16 +9,16 @@ namespace Backend.Tests
 {
     public class StreamTest
     {
+
         [SetUp]
         public void Setup()
         {
-
         }
 
         [Test]
         public void SetCycleNum()
         {
-            using (var connection = new ISSConnection())
+            using (var connection = new ISSConnection(Helper.GetDMCExeFile()))
             {
                 var adapter = new ISSAdapter(
                     Helper.GetIConfigurationRoot(),
@@ -36,7 +37,7 @@ namespace Backend.Tests
         [Test]
         public void TestStreamStartStop()
         {
-            using (var connection = new ISSConnection())
+            using (var connection = new ISSConnection(Helper.GetDMCExeFile()))
             {
                 var adapter = new ISSAdapter(
                     Helper.GetIConfigurationRoot(),

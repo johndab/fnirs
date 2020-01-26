@@ -10,10 +10,11 @@ namespace fNIRS.Hardware.ISS
     {
         private Process process;
 
-        public ISSConnection()
+        public ISSConnection(string exeFile)
         {
             process = new Process();
-            process.StartInfo.FileName = @"C:\dev\fNIRS\boxy\DMC_ImagentDuae.exe";
+            if (string.IsNullOrEmpty(exeFile)) return;
+            process.StartInfo.FileName = exeFile;
             process.StartInfo.CreateNoWindow = true;
             process.StartInfo.UseShellExecute = false;
             process.StartInfo.RedirectStandardOutput = true;
@@ -29,7 +30,11 @@ namespace fNIRS.Hardware.ISS
 
         public void Dispose()
         {
-            process.Kill();
+            try
+            {
+                process.Kill();
+            }
+            catch (Exception) {}
         }
     }
 }

@@ -189,11 +189,12 @@ export default {
           el.innerHTML = `${Math.floor(val)}`;
       }
 
-      Object.keys(data.values).forEach(d => {
+      Object.keys(data.values).forEach(num => {
+          let d = String.fromCharCode(parseInt(num, 10) + 64);
           const dbox = this.$refs[`detector${d}`];
-          if(dbox.length === 0 || data.values[d].length === 0) return;
+          if(!dbox || dbox.length === 0 || data.values[num].length === 0) return;
           const el = dbox[0];
-          const sourceValues = Object.values(data.values[d]);
+          const sourceValues = Object.values(data.values[num]);
           const avg = sourceValues.reduce((acc, source) => source.ac + acc, 0) 
             / sourceValues.length;
           

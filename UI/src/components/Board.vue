@@ -29,6 +29,22 @@
             </small>
           </BFormCheckbox>
         </div>
+        <div class="pl-3">
+          <BFormCheckbox
+            ref="checkbox"
+            v-model="showFrequency"
+            switch
+            size="lg"
+          >
+            {{ showFrequency ? '690nm' : '830nm' }}
+            <small 
+              class="text-secondary"
+              style="font-size: 12px"
+            >
+              / {{ !showFrequency ? '690nm' : '830nm' }}
+            </small>
+          </BFormCheckbox>
+        </div>
       </div>
 
       <div />
@@ -58,12 +74,22 @@ export default {
   data: () => ({
     depth: 1,
     showConnect: false,
+    showFrequency: false,
   }),
   computed: {
     ...mapGetters(['layout']),
   },
+  watch: {
+    showFrequency(v) {
+      this.$ipc.send('SetSourceFrequency', v ? 0 : 1);
+    }
+  },
   created() {
     this.$ipc.on('NewDataPacket', this.onNewData);
+    this.$ipc.send('SetSourceFrequency', this.showFrequency ? 0 : 1)
+    this.$ipc.on('Debug', (y) => {
+      console.debug(y);
+    });
   },
   destroyed() {
     this.$ipc.removeListener('NewDataPacket', this.onNewData);
@@ -74,7 +100,9 @@ export default {
     },
     setGraph(graph) {
       const model = graph.reduce((acc, x) => {
-        const key = parseInt(x.address, 10);
+        const detector = x.address.toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0) + 1;
+        const key = parseInt(detector, 10);
+        if(isNaN(key)) return acc;
         acc[key] = (x.nearest || []).map(x => parseInt(x.address, 10));
         return acc;
       }, {});

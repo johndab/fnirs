@@ -7,6 +7,7 @@ export default new Vuex.Store({
   state: {
     connected: false,
     streaming: false,
+    collecting: false,
     layout: [],
     layoutPending: false,
     cyclesNum: 8,
@@ -18,6 +19,9 @@ export default new Vuex.Store({
     },
     setStreaming(s, v) {
       s.streaming = v;
+    },
+    setCollecting(s, v) {
+      s.collecting = v;
     },
     setCyclesNum(s, v) {
       s.cyclesNum = v;
@@ -37,6 +41,7 @@ export default new Vuex.Store({
     cyclesNum: s => s.cyclesNum,
     isConnected: s => s.connected,
     isStreaming: s => s.streaming,
+    isCollecting: s => s.collecting,
     layout: s => s.layout,
     layoutPending: s => s.layoutPending,
   },

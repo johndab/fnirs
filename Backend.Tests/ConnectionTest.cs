@@ -17,8 +17,7 @@ namespace Backend.Tests
         [Test]
         public void TestConnectionStartStop()
         {
-
-            using (var connection = new ISSConnection())
+            using (var connection = new ISSConnection(Helper.GetDMCExeFile()))
             {
                 var adapter = new ISSAdapter(
                     Helper.GetIConfigurationRoot(),

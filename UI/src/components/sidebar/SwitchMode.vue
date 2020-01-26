@@ -10,6 +10,7 @@
 
     <BFormSelect 
       v-model="swMode"
+      :disabled="!isConnected"
       :options="options"
       @change="update"
     />
@@ -25,6 +26,7 @@ export default {
     swMode: 8,
   }),
   computed: {
+    ...mapGetters(['isConnected']),
     options() {
       return [
         {

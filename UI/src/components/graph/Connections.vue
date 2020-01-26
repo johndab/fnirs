@@ -99,11 +99,13 @@ export default {
       const max = data.acMax;
       const min = data.acMin;
 
-      Object.keys(data.values).forEach(d => {
-          Object.keys(data.values[d]).forEach(s => {
+      Object.keys(data.values).forEach(num => {
+        let d = String.fromCharCode(parseInt(num, 10) + 64);
+
+          Object.keys(data.values[num]).forEach(s => {
             const dline = this.$refs[`detector${d}_${s}`];
-            if(dline.length === 0 || !data.values[d][s]) return;
-            const val = data.values[d][s].ac;
+            if(dline.length === 0 || !data.values[num][s]) return;
+            const val = data.values[num][s].ac;
             // console.debug(val)
             const el = dline[0];
 

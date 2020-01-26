@@ -7,7 +7,9 @@ namespace fNIRS.Hubs
     {
         public void HardwareConnect()
         {
-            store.dmcApp = new ISSConnection();
+            if(store.dmcStart)
+                store.dmcApp = new ISSConnection(store.dmcExe);
+
             this.adapter.Connect();
             var conn = this.adapter.IsConnected();
             Clients.Caller.SendAsync("IsConnected", conn);
@@ -18,9 +20,14 @@ namespace fNIRS.Hubs
             adapter.Disconnect();
             if(store.dmcApp != null)
                 store.dmcApp.Dispose();
-            
+
+            messageParser.CollectStop();
+            Clients.Caller.SendAsync("IsCollecting", messageParser.IsCollecting());
+
             var conn = adapter.IsConnected();
+            var str = adapter.IsStreaming();
             Clients.Caller.SendAsync("IsConnected", conn);
+            Clients.Caller.SendAsync("IsStreaming", str);
         }
 
         public void IsConnected()

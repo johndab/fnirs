@@ -18,7 +18,7 @@ namespace fNIRS
         {
             Log.Logger = new LoggerConfiguration()
                 .WriteTo.Console()
-                .WriteTo.File("./fnirs.txt")
+                .WriteTo.File("./fnirs.log")
                 .CreateLogger();
 
             CreateWebHostBuilder(args).Run();

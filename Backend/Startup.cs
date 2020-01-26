@@ -8,6 +8,7 @@ using fNIRS.Hardware;
 using fNIRS.Hardware.ISS;
 using fNIRS.Hubs;
 using fNIRS.Memory;
+using Microsoft.AspNetCore.Http;
 
 namespace fNIRS
 {
@@ -40,6 +41,7 @@ namespace fNIRS
             });
 
             services.AddSingleton<HubStore>();
+            services.AddSingleton<MessageParser>();
             var demo = Configuration.GetValue("ISSAdapter:demo", false);
             if (demo)
                 services.AddSingleton<IAdapter, DemoAdapter>();
@@ -57,15 +59,15 @@ namespace fNIRS
             app.UseStaticFiles();
             app.UseSpaStaticFiles();
 
-            app.UseSpa(spa =>
-            {
-            //    spa.Options.SourcePath = "UI";
-            //    spa.UseProxyToSpaDevelopmentServer("http://localhost:8080");
-            });
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapHub<MainHub>("/fnirs");
+            });
+
+            app.UseSpa(spa =>
+            {
+               //spa.Options.SourcePath = "UI";
+               //spa.UseProxyToSpaDevelopmentServer("http://localhost:8080");
             });
 
             if (HybridSupport.IsElectronActive)

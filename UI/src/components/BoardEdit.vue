@@ -153,6 +153,14 @@ export default {
       this.$router.push('/');
     },
     setGraph(graph) {
+      const model = graph.reduce((acc, x) => {
+        const detector = x.address.toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0) + 1;
+        const key = parseInt(detector, 10);
+        if(isNaN(key)) return acc;
+        acc[key] = (x.nearest || []).map(x => parseInt(x.address, 10));
+        return acc;
+      }, {});
+
       this.$ipc.send('SetGraph', graph);
     },
     edit(item) {

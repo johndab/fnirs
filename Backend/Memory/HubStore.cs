@@ -16,13 +16,19 @@ namespace fNIRS.Memory
         {
             this.layoutPath = config.GetValue<string>("LayoutPath");
             this.logger = logger;
+            this.dmcExe = config.GetValue("DMCExe", "");
+            this.dmcStart = config.GetValue("StartDMC", false);
             this.hubContext = hubContext;
+            this.freq = 0;
         }
 
         public ILogger<MainHub> logger { get; set; }
         public IHubContext<MainHub> hubContext;
 
         public GraphModel graph;
+        public int freq { get; set; }
+        public bool dmcStart;
+        public string dmcExe;
         public string layoutPath { get; set; } 
         public string layout { get; set; }
         public ISSConnection dmcApp { get; set; }

@@ -43,5 +43,10 @@ namespace fNIRS.Hubs
         {
             store.graph = graph;
         }
+
+        public void SetSourceFrequency(int freq)
+        {
+            store.freq = freq;
+        }
     }
 }

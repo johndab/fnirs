@@ -10,6 +10,7 @@ using fNIRS.Hardware.Models;
 using fNIRS.Hardware.Exceptions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using fNIRS.Memory;
 
 namespace fNIRS.Hardware.ISS
 {
@@ -26,11 +27,12 @@ namespace fNIRS.Hardware.ISS
 
         private const int HELLO_TIMEOUT = 2000;
         private DataReader reader;
+        private MessageParser messageParser;
 
-
-        public ISSAdapter(IConfiguration Configuration, ILogger<ISSAdapter> logger)
+        public ISSAdapter(IConfiguration Configuration, MessageParser messageParser, ILogger<ISSAdapter> logger)
         {
             this.logger = logger;
+            this.messageParser = messageParser;
             host = Configuration.GetValue<string>("ISSAdapter:host");
             port = Configuration.GetValue<int>("ISSAdapter:port");
         }
@@ -46,7 +48,7 @@ namespace fNIRS.Hardware.ISS
                 this.client = new TcpClient(host, port);
                 this.stream = client.GetStream();
                 stream.ReadTimeout = 100;
-                this.reader = new DataReader(stream, logger);
+                this.reader = new DataReader(stream, messageParser, logger);
 
                 Thread.Sleep(100);
                 Hello();
@@ -136,14 +138,6 @@ namespace fNIRS.Hardware.ISS
             return reader.IsStreaming();
         }
 
-        public void RegisterStreamListener(Action<DataPacket> action)
-        {
-            reader.RegisterStreamListener(action);
-        }
-        public void RemoveStreamListener()
-        {
-            reader.RemoveStreamListener();
-        }
 #endregion
 #region FREQUENCIES
 

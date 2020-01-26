@@ -9,7 +9,6 @@
 </template>
 
 <script>
-// import Vue from 'vue';
 import * as signalR from "@microsoft/signalr";
 const url = process.env.VUE_APP_BASEURL
 

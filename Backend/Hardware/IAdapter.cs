@@ -16,8 +16,6 @@ namespace fNIRS.Hardware
         bool IsStreaming();
         int SetCycleNum(int num);
         int SetSwitch(int num);
-        void RegisterStreamListener(Action<DataPacket> action);
-        void RemoveStreamListener();
 
         
         ICollection<Frequency> GetFrequencies();

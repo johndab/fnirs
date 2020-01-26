@@ -7,11 +7,15 @@ namespace fNIRS.Hubs
     {
         public void StartDataStream()
         {
-            adapter.RegisterStreamListener((y) =>
+            messageParser.PacketAction = (y) =>
             {
-                var viewModel = y.ToModel(store.graph);
+                if(store.graph == null) return;
+
+
+                store.hubContext.Clients.All.SendAsync("Debug", y);
+                var viewModel = y.ToModel(store.graph, store.freq);
                 store.hubContext.Clients.All.SendAsync("NewDataPacket", viewModel);
-            });
+            };
 
             adapter.StartStreaming();
             var conn = adapter.IsStreaming();
@@ -20,8 +24,11 @@ namespace fNIRS.Hubs
 
         public void StopDataStream()
         {
-            adapter.RemoveStreamListener();
+            messageParser.PacketAction = null;
             adapter.StopStreaming();
+
+            messageParser.CollectStop();
+            Clients.Caller.SendAsync("IsCollecting", messageParser.IsCollecting());
 
             var conn = adapter.IsStreaming();
             Clients.Caller.SendAsync("IsStreaming", conn);
