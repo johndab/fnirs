@@ -10,7 +10,7 @@
 
 ## Prerequisites
 - Node.js
-- .NET Core SDK 3.0
+- .NET Core SDK 3.1
 
 ## How to run
 
