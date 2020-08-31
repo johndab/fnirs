@@ -66,8 +66,8 @@ namespace fNIRS
 
             app.UseSpa(spa =>
             {
-               //spa.Options.SourcePath = "UI";
-               //spa.UseProxyToSpaDevelopmentServer("http://localhost:8080");
+            //    spa.Options.SourcePath = "UI";
+            //    spa.UseProxyToSpaDevelopmentServer("http://localhost:8080");
             });
 
             if (HybridSupport.IsElectronActive)

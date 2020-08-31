@@ -4,6 +4,7 @@ using NUnit.Framework;
 using System;
 using System.Diagnostics;
 using System.Threading;
+using fNIRS.Memory;
 
 namespace Backend.Tests
 {
@@ -20,10 +21,9 @@ namespace Backend.Tests
         {
             using (var connection = new ISSConnection(Helper.GetDMCExeFile()))
             {
-                var adapter = new ISSAdapter(
-                    Helper.GetIConfigurationRoot(),
-                    Helper.GetILogger<ISSAdapter>()
-                );
+                var config = Helper.GetIConfigurationRoot();
+                var messageParser = new MessageParser(Helper.GetILogger<MessageParser>(), config);
+                var adapter = new ISSAdapter(config, messageParser, Helper.GetILogger<ISSAdapter>());
 
                 adapter.Connect();
 
@@ -39,18 +39,13 @@ namespace Backend.Tests
         {
             using (var connection = new ISSConnection(Helper.GetDMCExeFile()))
             {
-                var adapter = new ISSAdapter(
-                    Helper.GetIConfigurationRoot(),
-                    Helper.GetILogger<ISSAdapter>()
-                );
+                var config = Helper.GetIConfigurationRoot();
+                var messageParser = new MessageParser(Helper.GetILogger<MessageParser>(), config);
+                var adapter = new ISSAdapter(config, messageParser, Helper.GetILogger<ISSAdapter>());
 
                 adapter.Connect();
 
                 var packets = 0;
-                adapter.RegisterStreamListener((packet) =>
-                {
-                    packets += 1;
-                });
 
                 adapter.StartStreaming();
                 Assert.IsTrue(adapter.IsStreaming());

@@ -1,6 +1,7 @@
 using fNIRS.Hardware.ISS;
 using NUnit.Framework;
 using System;
+using fNIRS.Memory;
 using System.Diagnostics;
 using System.Threading;
 
@@ -20,10 +21,9 @@ namespace Backend.Tests
 
             using (var connection = new ISSConnection(Helper.GetDMCExeFile()))
             {
-                var adapter = new ISSAdapter(
-                    Helper.GetIConfigurationRoot(),
-                    Helper.GetILogger<ISSAdapter>()
-                );
+                var config = Helper.GetIConfigurationRoot();
+                var messageParser = new MessageParser(Helper.GetILogger<MessageParser>(), config);
+                var adapter = new ISSAdapter(config, messageParser, Helper.GetILogger<ISSAdapter>());
 
                 adapter.Connect();
                 var freq = adapter.GetFrequency();
