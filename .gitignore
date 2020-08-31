@@ -4,4 +4,6 @@ obj
 Properties
 data
 *.log
-.zip
+*.zip
+*.jar
+.DS_Store
