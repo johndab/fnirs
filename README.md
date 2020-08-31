@@ -1,4 +1,4 @@
-# fNIRS real-time data analysis tool
+# A tool for communication with ISS fNIRS Imagent™ system
 
 ![](report/app.png)
 
